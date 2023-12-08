@@ -13,46 +13,11 @@
 #include "dspt_filter_module.h"
 #include "dspt_control.h"
 
-#define DSP_INPUT_CHANNELS (NUM_USB_CHAN_OUT + NUM_USB_CHAN_IN)
-#define DSP_OUTPUT_CHANNELS (DSP_INPUT_CHANNELS)
 
 DECLARE_JOB(dsp_data_transport_thread, (chanend_t, chanend_t, chanend_t));
 DECLARE_JOB(dsp_control_thread, (chanend_t));
 DECLARE_JOB(dsp_thread, (chanend_t, chanend_t, module_info_t*, size_t));
 
-
-#pragma stackfunction 1000
-void dsp_thread(chanend_t c_source, chanend_t c_dest, module_info_t *module_info, size_t num_modules)
-{
-    module_instance_t *modules[num_modules]; // Array of pointers
-    for(int i=0; i<num_modules; i++)
-    {
-        modules[i] = create_module_instance(module_info[i].module, module_info[i].instance_id);
-    }
-
-    int32_t input_data[DSP_INPUT_CHANNELS] = {0};
-    int32_t output_data[DSP_OUTPUT_CHANNELS] = {0};
-
-    while(1)
-    {
-        int32_t *input_ptr = input_data;
-        int32_t *output_ptr = output_data;
-        chan_in_buf_word(c_source, (uint32_t*)input_ptr, DSP_INPUT_CHANNELS);
-        for(int i=0; i<num_modules; i++)
-        {
-            modules[i]->process_sample(input_ptr, output_ptr, modules[i]->state, modules[i]->config);
-
-            if(i < num_modules-1) // If we have more iterations
-            {
-                int32_t *temp = input_ptr;
-                input_ptr = output_ptr;
-                output_ptr = temp;
-            }
-        }
-        chan_out_buf_word(c_dest, (uint32_t*)output_ptr, DSP_OUTPUT_CHANNELS);
-        // Control
-    }
-}
 
 void dsp_data_transport_thread(chanend_t c_data, chanend_t c_start, chanend_t c_end)
 {
@@ -118,6 +83,11 @@ void dspt_xcore_main(chanend_t c_data, chanend_t c_control)
 
     info_thread2[0].instance_id = 3;
     info_thread2[0].module = biquads_4_sections;
+
+    /*for(int i=0; i<num_modules_thread1+num_modules_thread2; i++)
+    {
+
+    }*/
 
 
     PAR_JOBS(

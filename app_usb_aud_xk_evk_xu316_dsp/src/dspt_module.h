@@ -2,6 +2,10 @@
 #define DSPT_MODULE_H
 
 #include <stdint.h>
+#include "xua_conf.h" // For NUM_USB_CHAN_OUT and NUM_USB_CHAN_IN defines
+
+#define DSP_INPUT_CHANNELS (NUM_USB_CHAN_OUT + NUM_USB_CHAN_IN)
+#define DSP_OUTPUT_CHANNELS (DSP_INPUT_CHANNELS)
 
 #define DWORD_ALIGNED     __attribute__ ((aligned(8)))
 
