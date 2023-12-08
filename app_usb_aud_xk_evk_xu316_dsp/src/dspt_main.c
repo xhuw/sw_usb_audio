@@ -11,12 +11,15 @@
 #include "dsp.h"
 #include "dspt_module.h"
 #include "dspt_filter_module.h"
+#include "dspt_control.h"
 
 #define DSP_INPUT_CHANNELS (NUM_USB_CHAN_OUT + NUM_USB_CHAN_IN)
 #define DSP_OUTPUT_CHANNELS (DSP_INPUT_CHANNELS)
 
 DECLARE_JOB(dsp_data_transport_thread, (chanend_t, chanend_t, chanend_t));
+DECLARE_JOB(dsp_control_thread, (chanend_t));
 DECLARE_JOB(dsp_thread, (chanend_t, chanend_t, module_info_t*, size_t));
+
 
 #pragma stackfunction 1000
 void dsp_thread(chanend_t c_source, chanend_t c_dest, module_info_t *module_info, size_t num_modules)
@@ -91,7 +94,7 @@ void dsp_data_transport_thread(chanend_t c_data, chanend_t c_start, chanend_t c_
 
 #define NUM_DSP_THREADS (2)
 #define MAX_MODULES_PER_THREAD (8)
-void dspt_xcore_main(chanend_t c_data)
+void dspt_xcore_main(chanend_t c_data, chanend_t c_control)
 {
     channel_t chan_start_dsp, chan_end_dsp;
     chan_start_dsp = chan_alloc();
@@ -119,11 +122,10 @@ void dspt_xcore_main(chanend_t c_data)
 
     PAR_JOBS(
         PJOB(dsp_data_transport_thread, (c_data, chan_start_dsp.end_a, chan_end_dsp.end_b)),
+        PJOB(dsp_control_thread, (c_control)),
         //PJOB(dsp_thread, (chan_start_dsp.end_b, chan_intermediate[0].end_a, info_thread1, num_modules_thread1)),
         //PJOB(dsp_thread, (chan_intermediate[0].end_b, chan_end_dsp.end_a, info_thread2, num_modules_thread2))
 
         PJOB(dsp_thread, (chan_start_dsp.end_b, chan_end_dsp.end_a, info_thread1, num_modules_thread1))
     );
 }
-
-

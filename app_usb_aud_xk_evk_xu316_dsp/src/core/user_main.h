@@ -6,9 +6,9 @@
 void AudioHwRemote(chanend c);
 
 extern unsafe chanend uc_audiohw;
-extern void dsp_main();
+extern void dsp_main(chanend c_control);
 
-#define USER_MAIN_DECLARATIONS chan c_audiohw;
+#define USER_MAIN_DECLARATIONS chan c_audiohw; chan c_control;
 
 #define USER_MAIN_CORES on tile[1]: {\
                                         par\
@@ -16,7 +16,7 @@ extern void dsp_main();
                                             unsafe{\
                                                 uc_audiohw = (chanend) c_audiohw;\
                                             }\
-                                            dsp_main();\
+                                            dsp_main(c_control);\
                                         }\
                                     }\
 \

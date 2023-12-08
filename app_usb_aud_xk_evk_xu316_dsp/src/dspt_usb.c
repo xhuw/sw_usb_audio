@@ -1,7 +1,7 @@
 #include <xcore/channel.h>
 #include "xua_conf.h"
 
-extern void dspt_xcore_main(chanend_t c_data);
+extern void dspt_xcore_main(chanend_t c_data, chanend_t c_control);
 
 static chanend_t g_c_to_dsp;
 
@@ -35,9 +35,9 @@ void UserBufferManagement(unsigned sampsFromUsbToAudio[], unsigned sampsFromAudi
 }
 
 
-void dsp_main() {
+void dsp_main(chanend_t c_control) {
     channel_t c_data = chan_alloc();
     g_c_to_dsp = c_data.end_a;
-    dspt_xcore_main(c_data.end_b);
+    dspt_xcore_main(c_data.end_b, c_control);
 }
 
