@@ -1,0 +1,43 @@
+#include <xcore/channel.h>
+#include "xua_conf.h"
+
+extern void dspt_xcore_main(chanend_t c_data);
+
+static chanend_t g_c_to_dsp;
+
+void UserBufferManagementInit()
+{
+    //TODO
+}
+
+void UserBufferManagement(unsigned sampsFromUsbToAudio[], unsigned sampsFromAudioToUsb[])
+{
+    //offload_data_to_dsp_engine(g_c_to_dsp, sampsFromUsbToAudio, sampsFromAudioToUsb);
+    for(int ch=0; ch<NUM_USB_CHAN_OUT; ch++) // From USB
+    {
+        chanend_out_word(g_c_to_dsp, sampsFromUsbToAudio[ch]);
+    }
+    for(int ch=0; ch<NUM_USB_CHAN_IN; ch++) // From Audio
+    {
+        chanend_out_word(g_c_to_dsp, sampsFromAudioToUsb[ch]);
+    }
+    chanend_out_end_token(g_c_to_dsp);
+
+    for(int ch=0; ch<NUM_USB_CHAN_OUT; ch++) // To Audio
+    {
+        sampsFromUsbToAudio[ch] = chanend_in_word(g_c_to_dsp);
+    }
+    for(int ch=0; ch<NUM_USB_CHAN_IN; ch++) // To USB
+    {
+        sampsFromAudioToUsb[ch] = chanend_in_word(g_c_to_dsp);
+    }
+    chanend_check_end_token(g_c_to_dsp);
+}
+
+
+void dsp_main() {
+    channel_t c_data = chan_alloc();
+    g_c_to_dsp = c_data.end_a;
+    dspt_xcore_main(c_data.end_b);
+}
+
