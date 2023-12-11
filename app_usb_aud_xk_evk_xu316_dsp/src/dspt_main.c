@@ -13,10 +13,9 @@
 #include "dspt_filter_module.h"
 #include "dspt_control.h"
 
-
 DECLARE_JOB(dsp_data_transport_thread, (chanend_t, chanend_t, chanend_t));
-DECLARE_JOB(dsp_control_thread, (chanend_t));
-DECLARE_JOB(dsp_thread, (chanend_t, chanend_t, module_info_t*, size_t));
+DECLARE_JOB(dsp_control_thread, (chanend_t, module_instance_t **, size_t));
+DECLARE_JOB(dsp_thread, (chanend_t, chanend_t, module_instance_t**, size_t));
 
 
 void dsp_data_transport_thread(chanend_t c_data, chanend_t c_start, chanend_t c_end)
@@ -59,6 +58,8 @@ void dsp_data_transport_thread(chanend_t c_data, chanend_t c_start, chanend_t c_
 
 #define NUM_DSP_THREADS (2)
 #define MAX_MODULES_PER_THREAD (8)
+
+#pragma stackfunction 1000
 void dspt_xcore_main(chanend_t c_data, chanend_t c_control)
 {
     channel_t chan_start_dsp, chan_end_dsp;
@@ -72,7 +73,7 @@ void dspt_xcore_main(chanend_t c_data, chanend_t c_control)
         chan_intermediate[i] = chan_alloc();
     }
 #endif
-
+    // pointer to an array
     // Setup the what runs where map
     module_info_t info_thread1[MAX_MODULES_PER_THREAD], info_thread2[MAX_MODULES_PER_THREAD];
     const int32_t num_modules_thread1 = 2, num_modules_thread2 = 1;
@@ -84,18 +85,21 @@ void dspt_xcore_main(chanend_t c_data, chanend_t c_control)
     info_thread2[0].instance_id = 3;
     info_thread2[0].module = biquads_4_sections;
 
-    /*for(int i=0; i<num_modules_thread1+num_modules_thread2; i++)
+    const int32_t total_num_modules = num_modules_thread1 + num_modules_thread2;
+    module_instance_t *modules[total_num_modules]; // Array of pointers
+    for(int i=0; i<num_modules_thread1; i++)
     {
-
-    }*/
-
+        modules[i] = create_module_instance(info_thread1[i].module, info_thread1[i].instance_id);
+    }
+    for(int i=0; i<num_modules_thread2; i++)
+    {
+        modules[num_modules_thread1 + i] = create_module_instance(info_thread2[i].module, info_thread2[i].instance_id);
+    }
 
     PAR_JOBS(
         PJOB(dsp_data_transport_thread, (c_data, chan_start_dsp.end_a, chan_end_dsp.end_b)),
-        PJOB(dsp_control_thread, (c_control)),
-        //PJOB(dsp_thread, (chan_start_dsp.end_b, chan_intermediate[0].end_a, info_thread1, num_modules_thread1)),
-        //PJOB(dsp_thread, (chan_intermediate[0].end_b, chan_end_dsp.end_a, info_thread2, num_modules_thread2))
-
-        PJOB(dsp_thread, (chan_start_dsp.end_b, chan_end_dsp.end_a, info_thread1, num_modules_thread1))
+        PJOB(dsp_control_thread, (c_control, modules, total_num_modules)),
+        PJOB(dsp_thread, (chan_start_dsp.end_b, chan_intermediate[0].end_a, &modules[0], num_modules_thread1)),
+        PJOB(dsp_thread, (chan_intermediate[0].end_b, chan_end_dsp.end_a, &modules[num_modules_thread1], num_modules_thread2))
     );
 }

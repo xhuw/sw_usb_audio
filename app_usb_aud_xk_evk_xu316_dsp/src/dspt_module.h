@@ -33,13 +33,13 @@ typedef enum
 
 
 // Function declaration
-module_instance_t* create_module_instance(all_dsp_modules_t dsp_module, uint8_t id);
+DSP_MODULE_INIT_ATTR
+module_instance_t* DSP_MODULE_INIT_ATTR create_module_instance(all_dsp_modules_t dsp_module, uint8_t id);
 
 typedef struct
 {
     uint8_t instance_id;
     all_dsp_modules_t module;
 }module_info_t;
-
 
 #endif

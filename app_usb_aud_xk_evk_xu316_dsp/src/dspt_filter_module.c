@@ -10,6 +10,7 @@
 #define DSP_INPUT_CHANNELS (NUM_USB_CHAN_OUT + NUM_USB_CHAN_IN)
 #define DSP_OUTPUT_CHANNELS (DSP_INPUT_CHANNELS)
 
+
 DSP_MODULE_PROCESS_ATTR
 void stage_filter_process(int32_t *input, int32_t *output, void *app_data_state, void *app_data_config)
 {
