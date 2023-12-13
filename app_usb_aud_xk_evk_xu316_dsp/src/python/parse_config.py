@@ -25,9 +25,16 @@ print("In parse_config.py!!\n\n")
 args = parse_arguments()
 print(f"out_dir = {args.out_dir}")
 os.makedirs(args.out_dir, exist_ok=True)
+os.makedirs(f"{args.out_dir}/common", exist_ok=True)
+os.makedirs(f"{args.out_dir}/device", exist_ok=True)
+os.makedirs(f"{args.out_dir}/host", exist_ok=True)
+os.makedirs(f"{args.out_dir}/generator", exist_ok=True)
+
 struct_def_template = Template(filename=f'{templates_dir}/struct_def_h.mako')
-struct_offset_template = Template(filename=f'{templates_dir}/command_map_offsets_c.mako')
+struct_offset_template = Template(filename=f'{templates_dir}/gen_command_map_offsets_c.mako')
 cmd_map_template = Template(filename=f'{templates_dir}/command_map_c.mako')
+cmd_ids_template = Template(filename=f'{templates_dir}/cmds_h.mako')
+module_config_offsets_template = Template(filename=f'{templates_dir}/cmd_offsets_h.mako')
 
 cmd_map = {}
 
@@ -38,14 +45,23 @@ for fl in files:
         struct_name=list(data["module"].keys())[0]
         includes = data["includes"] if "includes" in data else []
         defines = data["defines"] if "defines" in data else dict()
-        with open(f"{args.out_dir}/{struct_name}.h", "w") as f_op:
+        with open(f"{args.out_dir}/common/{struct_name}.h", "w") as f_op:
             f_op.write(struct_def_template.render(name=struct_name, data=data["module"][struct_name],
                                                   includes=includes, defines=defines))
 
         cmd_map[struct_name] = data["module"][struct_name]
 
-with open(f"{args.out_dir}/cmd_map_offset.c", "w") as f_op:
+with open(f"{args.out_dir}/generator/gen_cmd_map_offset.c", "w") as f_op:
     f_op.write(struct_offset_template.render(cmd_map=cmd_map))
 
-with open(f"{args.out_dir}/cmd_map.c", "w") as f_op:
+# Generate cmd_map used by the host
+with open(f"{args.out_dir}/host/cmd_map.c", "w") as f_op:
     f_op.write(cmd_map_template.render(cmd_map=cmd_map))
+
+# Generate #defines present in the cmd map used by the host
+with open(f"{args.out_dir}/common/cmds.h", "w") as f_op:
+    f_op.write(cmd_ids_template.render(cmd_map=cmd_map))
+
+#generate the config offsets for every module
+with open(f"{args.out_dir}/device/cmd_offsets.h", "w") as f_op:
+    f_op.write(module_config_offsets_template.render(cmd_map=cmd_map))

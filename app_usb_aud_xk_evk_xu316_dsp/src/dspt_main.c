@@ -10,7 +10,7 @@
 #include "xua_conf.h"
 #include "dsp.h"
 #include "dspt_module.h"
-#include "dspt_filter_module.h"
+#include "dspt_parametric_eq.h"
 #include "dspt_control.h"
 
 DECLARE_JOB(dsp_data_transport_thread, (chanend_t, chanend_t, chanend_t));

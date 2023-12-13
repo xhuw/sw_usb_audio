@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <xassert.h>
 #include "debug_print.h"
-#include "dspt_filter_module.h"
+#include "dspt_parametric_eq.h"
 #include "xua_conf.h"
 
 // TODO duplicated defines!
@@ -15,7 +15,7 @@ DSP_MODULE_PROCESS_ATTR
 void stage_filter_process(int32_t *input, int32_t *output, void *app_data_state, void *app_data_config)
 {
     xassert(app_data_state != NULL);
-    filter_state_t *state = app_data_state;
+    parametric_eq_state_t *state = app_data_state;
 
     // 4 biquads over 4 samples take 290 reference timer cycles
     for(int i=0; i<state->config.num_outputs; i++)
@@ -34,8 +34,8 @@ module_instance_t* stage_filter_init(uint8_t id)
 {
     module_instance_t *module_instance = malloc(sizeof(module_instance_t));
 
-    filter_state_t *state = malloc(sizeof(filter_state_t)); // malloc_from_heap
-    filter_config_t *config = malloc(sizeof(filter_config_t)); // malloc_from_heap
+    parametric_eq_state_t *state = malloc(sizeof(parametric_eq_state_t)); // malloc_from_heap
+    parametric_eq_config_t *config = malloc(sizeof(parametric_eq_config_t)); // malloc_from_heap
 
     memset(state->filter_states, 0, sizeof(state->filter_states));
 
@@ -53,7 +53,7 @@ module_instance_t* stage_filter_init(uint8_t id)
     state->config.num_outputs = DSP_OUTPUT_CHANNELS;
     state->config.input_start_offset = 0;
 
-    memcpy(config, &state->config, sizeof(filter_config_t));
+    memcpy(config, &state->config, sizeof(parametric_eq_config_t));
 
     module_instance->id = id;
     module_instance->state = state;

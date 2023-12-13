@@ -1,6 +1,6 @@
 #include <xcore/channel.h>
 #include "dspt_module.h"
-#include "dspt_filter_module.h"
+#include "dspt_parametric_eq.h"
 
 // Table containing init functions for all modules
 static DSP_MODULE_INIT_ATTR dsp_module_init DSP_MODULE_INIT_ATTR module_init_functions[] = {stage_filter_init};

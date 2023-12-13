@@ -21,6 +21,7 @@ typedef void (*dsp_module_process)(int32_t *input, int32_t *output, void *state,
 
 typedef struct
 {
+    //all_dsp_modules_t module;
     uint32_t id;    // Unique module identifier assigned by the host
     void *state;    // Pointer to the module's state memory
     void *config;   // Pointer to the shared config memory between module and the control thread
@@ -33,6 +34,7 @@ typedef struct
     uint32_t id;
     void *config;
     bool dirty;
+    uint8_t cmd_id;
 }module_instance_control_t;*/
 
 
@@ -49,5 +51,11 @@ typedef struct
     uint8_t instance_id;
     all_dsp_modules_t module;
 }module_info_t;
+
+typedef struct {
+    uint32_t cmd_id; // CmdID
+    uint32_t offset;    // offset
+    uint32_t size;      //size
+}module_config_offsets_t;
 
 #endif
