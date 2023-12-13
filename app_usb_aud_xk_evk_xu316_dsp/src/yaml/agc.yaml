@@ -1,0 +1,7 @@
+module:
+  agc:
+    gain:
+      type: int32_t
+includes:
+  - stdint.h
+  - "dspt_module.h"

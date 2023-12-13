@@ -1,5 +1,5 @@
 module:
-  biquads_4_sections:
+  parametric_eq:
     num_inputs:
       type: int32_t
     filter_coeffs:

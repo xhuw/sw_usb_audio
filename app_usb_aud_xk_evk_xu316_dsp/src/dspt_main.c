@@ -78,12 +78,12 @@ void dspt_xcore_main(chanend_t c_data, chanend_t c_control)
     module_info_t info_thread1[MAX_MODULES_PER_THREAD], info_thread2[MAX_MODULES_PER_THREAD];
     const int32_t num_modules_thread1 = 2, num_modules_thread2 = 1;
     info_thread1[0].instance_id = 1;
-    info_thread1[0].module = biquads_4_sections;
+    info_thread1[0].module = parametric_eq;
     info_thread1[1].instance_id = 2;
-    info_thread1[1].module = biquads_4_sections;
+    info_thread1[1].module = parametric_eq;
 
     info_thread2[0].instance_id = 3;
-    info_thread2[0].module = biquads_4_sections;
+    info_thread2[0].module = parametric_eq;
 
     const int32_t total_num_modules = num_modules_thread1 + num_modules_thread2;
     module_instance_t *modules[total_num_modules]; // Array of pointers

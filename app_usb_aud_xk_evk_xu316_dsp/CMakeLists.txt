@@ -11,12 +11,7 @@ list(APPEND CMD_MAP_GEN_ARGS --out-dir ${AUTOGEN_DIR})
 set(CMD_MAP_GEN_SCRIPT ${CMAKE_CURRENT_LIST_DIR}/src/python/parse_config.py)
 
 # Get output C file names
-unset(OUTPUT_C_FILES)
-foreach(YAML ${MODULE_CONFIG_YAML_FILES})
-    get_filename_component(Y ${YAML} NAME)
-    string(REGEX REPLACE "[.]yaml$" "_offset.c" OUTPUT ${Y})
-    list(APPEND OUTPUT_C_FILES ${AUTOGEN_DIR}/${OUTPUT})
-endforeach()
+set(OUTPUT_C_FILES ${AUTOGEN_DIR}/cmd_map_offset.c)
 
 add_custom_command(
     OUTPUT ${OUTPUT_C_FILES}
@@ -49,7 +44,7 @@ set(APP_COMPILER_FLAGS_1AMi2o2xxxxxx ${SW_USB_AUDIO_FLAGS} -DAUDIO_CLASS=1)
 
 set(APP_COMPILER_FLAGS_2AMi2o2xxxxxx ${SW_USB_AUDIO_FLAGS})
 
-set(APP_COMPILER_FLAGS_test ${SW_USB_AUDIO_FLAGS} -DOFFSET_GEN=1 -DEXCLUDE_USB_AUDIO_MAIN)
+set(APP_COMPILER_FLAGS_test ${SW_USB_AUDIO_FLAGS} -DOFFSET_GEN=1 -DEXCLUDE_USB_AUDIO_MAIN -fcmdline-buffer-bytes=512)
 
 include(${CMAKE_CURRENT_LIST_DIR}/configs_test.cmake)
 
@@ -65,12 +60,19 @@ endforeach()
 
 target_sources(${PROJECT_NAME}_test PRIVATE ${OUTPUT_C_FILES})
 
+set(_EXECUTABLE_TARGET_NAME ${PROJECT_NAME}_test)
+add_custom_target(run_${_EXECUTABLE_TARGET_NAME}
+COMMAND xsim --args $<TARGET_FILE:${PROJECT_NAME}_test> ${AUTOGEN_DIR}/cmd_offset_size.h
+DEPENDS ${_EXECUTABLE_TARGET_NAME}
+COMMENT
+  "Run application"
+VERBATIM
+)
 
-
-#set(OFFSET_GEN_APP test)
+#set(OFFSET_GEN_APP test_args)
 #add_executable(${OFFSET_GEN_APP})
 #add_dependencies(${OFFSET_GEN_APP} cmd_map_generation)
 #target_sources(${OFFSET_GEN_APP} PRIVATE ${OUTPUT_C_FILES})
 #target_include_directories(${OFFSET_GEN_APP} PRIVATE src src/core ${AUTOGEN_DIR} ${CMAKE_CURRENT_LIST_DIR}/../../lib_dsp/lib_dsp/api)
-#target_compile_options(${OFFSET_GEN_APP} PRIVATE ${SW_USB_AUDIO_FLAGS} -DOFFSET_GEN=1 -DEXCLUDE_USB_AUDIO_MAIN -target=${APP_HW_TARGET})
+#target_compile_options(${OFFSET_GEN_APP} PRIVATE -DOFFSET_GEN=1 -DEXCLUDE_USB_AUDIO_MAIN -g -O0 -target=${APP_HW_TARGET} -fcmdline-buffer-bytes=512)
 #target_link_options(${OFFSET_GEN_APP} PRIVATE -target=${APP_HW_TARGET})

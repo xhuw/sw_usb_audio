@@ -26,7 +26,11 @@ args = parse_arguments()
 print(f"out_dir = {args.out_dir}")
 os.makedirs(args.out_dir, exist_ok=True)
 struct_def_template = Template(filename=f'{templates_dir}/struct_def_h.mako')
-struct_offset_template = Template(filename=f'{templates_dir}/struct_offsets_c.mako')
+struct_offset_template = Template(filename=f'{templates_dir}/command_map_offsets_c.mako')
+cmd_map_template = Template(filename=f'{templates_dir}/command_map_c.mako')
+
+cmd_map = {}
+
 for fl in files:
     with open(fl, "r") as fd:
         data = yaml.safe_load(fd)
@@ -37,8 +41,11 @@ for fl in files:
         with open(f"{args.out_dir}/{struct_name}.h", "w") as f_op:
             f_op.write(struct_def_template.render(name=struct_name, data=data["module"][struct_name],
                                                   includes=includes, defines=defines))
-        with open(f"{args.out_dir}/{struct_name}_offset.c", "w") as f_op:
-            f_op.write(struct_offset_template.render(name=struct_name, data=data["module"][struct_name]))
 
+        cmd_map[struct_name] = data["module"][struct_name]
 
+with open(f"{args.out_dir}/cmd_map_offset.c", "w") as f_op:
+    f_op.write(struct_offset_template.render(cmd_map=cmd_map))
 
+with open(f"{args.out_dir}/cmd_map.c", "w") as f_op:
+    f_op.write(cmd_map_template.render(cmd_map=cmd_map))
