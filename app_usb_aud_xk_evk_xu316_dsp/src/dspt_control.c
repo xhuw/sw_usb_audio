@@ -68,20 +68,23 @@ void dsp_control_thread(chanend_t c_control, module_instance_control_t** modules
             chan_in_buf_byte(c_control, (uint8_t*)&req, sizeof(control_req_t));
             if(req.cmd_id & 0x80) // Read command
             {
+                printf("Read command\n");
                 module_instance_control_t *module_control = get_module_control_instance(modules_control, req.res_id, num_modules);
                 // From the cmd_id, get the offset and size into the config struct
                 uint32_t offset, size;
-                get_control_cmd_config_offset(module_control, req.cmd_id, &offset, &size);
-                if(size != req.payload_len)
+                get_control_cmd_config_offset(module_control, (req.cmd_id & 0x7f), &offset, &size);
+                if(size != req.payload_len - 1) // 1 extra payload byte to return status in
                 {
                     printf("ERROR: payload_len mismatch. Expected %lu, but received %u\n", size, req.payload_len);
                     xassert(0);
                 }
-                memcpy((uint8_t*)payload, (uint8_t*)module_control->config + offset, req.payload_len);
+                payload[0] = 0; // status
+                memcpy((uint8_t*)&payload[1], (uint8_t*)module_control->config + offset, size);
                 chan_out_buf_byte(c_control, (uint8_t*)payload, req.payload_len);
             }
             else // write command
             {
+                printf("Write command\n");
                 module_instance_control_t *module_control = get_module_control_instance(modules_control, req.res_id, num_modules);
                 // From the cmd_id, get the offset and size into the config struct
                 uint32_t offset, size;

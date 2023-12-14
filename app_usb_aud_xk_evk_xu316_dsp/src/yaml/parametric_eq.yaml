@@ -15,5 +15,5 @@ includes:
   - "dsp.h"
   - "dspt_module.h"
 defines:
-  FILTERS: 4
+  FILTERS: 2
 
