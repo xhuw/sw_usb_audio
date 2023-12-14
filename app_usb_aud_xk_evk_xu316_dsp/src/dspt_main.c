@@ -67,6 +67,7 @@ static module_instance_control_t* create_module_control_instance(module_instance
     module_control->id = module_instance->id;
     module_control->config = module_instance->config;
     module_control->dirty = false;
+    module_control->num_control_commands = module_instance->num_control_commands;
     return module_control;
 }
 

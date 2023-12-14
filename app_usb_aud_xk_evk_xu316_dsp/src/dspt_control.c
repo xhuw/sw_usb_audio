@@ -37,7 +37,7 @@ static void get_control_cmd_config_offset(module_instance_control_t *module_cont
     all_dsp_modules_t module_type = module_control->module_type;
     module_config_offsets_t *config_offsets = ptr_module_offsets[module_type];
 
-    for(int i=0; i<NUM_CMDS_PARAMETRIC_EQ/*TODO*/; i++)
+    for(int i=0; i<module_control->num_control_commands; i++)
     {
         if(cmd_id == (uint8_t)config_offsets[i].cmd_id)
         {
@@ -96,6 +96,8 @@ void dsp_control_thread(chanend_t c_control, module_instance_control_t** modules
                 }
                 // Receive write payload
                 chan_in_buf_byte(c_control, (uint8_t*)module_control->config + offset, req.payload_len);
+                module_control->cmd_id = req.cmd_id;
+                module_control->dirty = true;
             }
         }
         continue;
