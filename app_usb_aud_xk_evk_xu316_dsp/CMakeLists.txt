@@ -44,11 +44,11 @@ set(APP_COMPILER_FLAGS_1AMi2o2xxxxxx ${SW_USB_AUDIO_FLAGS} -DAUDIO_CLASS=1)
 
 set(APP_COMPILER_FLAGS_2AMi2o2xxxxxx ${SW_USB_AUDIO_FLAGS})
 
-set(APP_COMPILER_FLAGS_test ${SW_USB_AUDIO_FLAGS} -DOFFSET_GEN=1 -DEXCLUDE_USB_AUDIO_MAIN -fcmdline-buffer-bytes=512)
+#set(APP_COMPILER_FLAGS_test ${SW_USB_AUDIO_FLAGS} -DOFFSET_GEN=1 -DEXCLUDE_USB_AUDIO_MAIN -fcmdline-buffer-bytes=512)
 
 include(${CMAKE_CURRENT_LIST_DIR}/configs_test.cmake)
 
-set(APP_INCLUDES src src/core src/extensions ${AUTOGEN_DIR}/common ${AUTOGEN_DIR}/device ${AUTOGEN_DIR}/generator)
+set(APP_INCLUDES src src/core src/extensions ${AUTOGEN_DIR}/common ${AUTOGEN_DIR}/device)
 set(XMOS_SANDBOX_DIR ${CMAKE_CURRENT_LIST_DIR}/../..)
 
 XMOS_REGISTER_APP()
@@ -56,15 +56,3 @@ XMOS_REGISTER_APP()
 foreach(BUILD_TARGET ${APP_BUILD_TARGETS})
     add_dependencies(${BUILD_TARGET} cmd_map_generation)
 endforeach()
-
-target_sources(${PROJECT_NAME}_test PRIVATE ${OUTPUT_C_FILES})
-#target_include_directories(${PROJECT_NAME}_test PRIVATE ${AUTOGEN_DIR}/generator)
-
-set(_EXECUTABLE_TARGET_NAME ${PROJECT_NAME}_test)
-add_custom_target(run_${_EXECUTABLE_TARGET_NAME}
-COMMAND xsim --args $<TARGET_FILE:${PROJECT_NAME}_test> ${AUTOGEN_DIR}/host/cmd_num_values.h
-DEPENDS ${_EXECUTABLE_TARGET_NAME}
-COMMENT
-  "Run application"
-VERBATIM
-)
