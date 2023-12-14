@@ -20,24 +20,24 @@ typedef struct {
 #define APP_CONTROL_CMD_CONFIG 0x00
 #define APP_CONTROL_CMD_CONFIG_OFFSET 0x01
 
-static module_instance_control_t* get_module_control_instance(module_instance_control_t **modules_control, uint32_t res_id, size_t num_modules)
+static module_instance_t* get_module_control_instance(module_instance_t **modules, uint32_t res_id, size_t num_modules)
 {
     for(int i=0; i<num_modules; i++)
     {
-        if(modules_control[i]->id == res_id)
+        if(modules[i]->id == res_id)
         {
-            return modules_control[i];
+            return modules[i];
         }
     }
     return NULL;
 }
 
-static void get_control_cmd_config_offset(module_instance_control_t *module_control, uint8_t cmd_id, uint32_t *offset, uint32_t *size)
+static void get_control_cmd_config_offset(module_instance_t *module, uint8_t cmd_id, uint32_t *offset, uint32_t *size)
 {
-    all_dsp_modules_t module_type = module_control->module_type;
+    all_dsp_modules_t module_type = module->module_type;
     module_config_offsets_t *config_offsets = ptr_module_offsets[module_type];
 
-    for(int i=0; i<module_control->num_control_commands; i++)
+    for(int i=0; i<module->num_control_commands; i++)
     {
         if(cmd_id == (uint8_t)config_offsets[i].cmd_id)
         {
@@ -53,7 +53,7 @@ static void get_control_cmd_config_offset(module_instance_control_t *module_cont
 
 
 #define MAX_CONTROL_PAYLOAD_LEN 64
-void dsp_control_thread(chanend_t c_control, module_instance_control_t** modules_control, size_t num_modules)
+void dsp_control_thread(chanend_t c_control, module_instance_t** modules, size_t num_modules)
 {
     int8_t payload[MAX_CONTROL_PAYLOAD_LEN] = {0};
     uint8_t temp = chan_in_byte(c_control);
@@ -68,36 +68,44 @@ void dsp_control_thread(chanend_t c_control, module_instance_control_t** modules
             chan_in_buf_byte(c_control, (uint8_t*)&req, sizeof(control_req_t));
             if(req.cmd_id & 0x80) // Read command
             {
-                printf("Read command\n");
-                module_instance_control_t *module_control = get_module_control_instance(modules_control, req.res_id, num_modules);
+                //printf("Read command\n");
+                module_instance_t *module = get_module_control_instance(modules, req.res_id, num_modules);
                 // From the cmd_id, get the offset and size into the config struct
                 uint32_t offset, size;
-                get_control_cmd_config_offset(module_control, (req.cmd_id & 0x7f), &offset, &size);
+                get_control_cmd_config_offset(module, (req.cmd_id & 0x7f), &offset, &size);
                 if(size != req.payload_len - 1) // 1 extra payload byte to return status in
                 {
                     printf("ERROR: payload_len mismatch. Expected %lu, but received %u\n", size, req.payload_len);
                     xassert(0);
                 }
                 payload[0] = 0; // status
-                memcpy((uint8_t*)&payload[1], (uint8_t*)module_control->config + offset, size);
+                memcpy((uint8_t*)&payload[1], (uint8_t*)module->config + offset, size);
                 chan_out_buf_byte(c_control, (uint8_t*)payload, req.payload_len);
             }
             else // write command
             {
-                printf("Write command\n");
-                module_instance_control_t *module_control = get_module_control_instance(modules_control, req.res_id, num_modules);
+                //printf("Write command. res_id %d\n", req.res_id);
+                module_instance_t *module = get_module_control_instance(modules, req.res_id, num_modules);
                 // From the cmd_id, get the offset and size into the config struct
                 uint32_t offset, size;
-                get_control_cmd_config_offset(module_control, req.cmd_id, &offset, &size);
+                get_control_cmd_config_offset(module, req.cmd_id, &offset, &size);
                 if(size != req.payload_len)
                 {
                     printf("ERROR: payload_len mismatch. Expected %lu, but received %u\n", size, req.payload_len);
                     xassert(0);
                 }
-                // Receive write payload
-                chan_in_buf_byte(c_control, (uint8_t*)module_control->config + offset, req.payload_len);
-                module_control->cmd_id = req.cmd_id;
-                module_control->dirty = true;
+                if(module->dirty == false)
+                {
+                    // Receive write payload
+                    chan_in_buf_byte(c_control, (uint8_t*)module->config + offset, req.payload_len);
+                    module->cmd_id = req.cmd_id;
+                    module->dirty = true;
+                }
+                else
+                {
+                    chan_in_buf_byte(c_control, (uint8_t*)payload, req.payload_len);
+                    printf("ERROR: Previous write to the config not applied by the module!! Ignoring write command.");
+                }
             }
         }
         continue;
