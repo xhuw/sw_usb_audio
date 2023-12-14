@@ -32,11 +32,29 @@ static module_instance_control_t* get_module_control_instance(module_instance_co
     return NULL;
 }
 
+static void get_control_cmd_config_offset(module_instance_control_t *module_control, uint8_t cmd_id, uint32_t *offset, uint32_t *size)
+{
+    all_dsp_modules_t module_type = module_control->module_type;
+    module_config_offsets_t *config_offsets = ptr_module_offsets[module_type];
+
+    for(int i=0; i<NUM_CMDS_PARAMETRIC_EQ/*TODO*/; i++)
+    {
+        if(cmd_id == (uint8_t)config_offsets[i].cmd_id)
+        {
+            *offset = config_offsets[i].offset;
+            *size = config_offsets[i].size;
+            return;
+        }
+    }
+    printf("ERROR: cmd_id %d not found in module_type %d\n", cmd_id, module_type);
+    xassert(0);
+    return;
+}
+
 
 #define MAX_CONTROL_PAYLOAD_LEN 64
 void dsp_control_thread(chanend_t c_control, module_instance_control_t** modules_control, size_t num_modules)
 {
-    uint32_t current_config_offset = 0;
     int8_t payload[MAX_CONTROL_PAYLOAD_LEN] = {0};
     uint8_t temp = chan_in_byte(c_control);
     printf("dsp_control_thread received init token %d\n", temp);
@@ -50,45 +68,31 @@ void dsp_control_thread(chanend_t c_control, module_instance_control_t** modules
             chan_in_buf_byte(c_control, (uint8_t*)&req, sizeof(control_req_t));
             if(req.cmd_id & 0x80) // Read command
             {
-                if((req.cmd_id & 0x7f) == APP_CONTROL_CMD_CONFIG_OFFSET)
+                module_instance_control_t *module_control = get_module_control_instance(modules_control, req.res_id, num_modules);
+                // From the cmd_id, get the offset and size into the config struct
+                uint32_t offset, size;
+                get_control_cmd_config_offset(module_control, req.cmd_id, &offset, &size);
+                if(size != req.payload_len)
                 {
-                    chan_out_buf_byte(c_control, (uint8_t*)&current_config_offset, req.payload_len);
-                }
-                else if((req.cmd_id & 0x7f) == APP_CONTROL_CMD_CONFIG)
-                {
-                    //debug_printf("APP_CONTROL_CMD_CONFIG\n");
-                    module_instance_control_t *module = get_module_control_instance(modules_control, req.res_id, num_modules);
-                    xassert(module != NULL);
-
-                    memcpy((uint8_t*)payload, (uint8_t*)module->config + current_config_offset, req.payload_len);
-
-                    // Return read payload
-                    chan_out_buf_byte(c_control, (uint8_t*)payload, req.payload_len);
-                }
-                else
-                {
+                    printf("ERROR: payload_len mismatch. Expected %lu, but received %u\n", size, req.payload_len);
                     xassert(0);
                 }
+                memcpy((uint8_t*)payload, (uint8_t*)module_control->config + offset, req.payload_len);
+                chan_out_buf_byte(c_control, (uint8_t*)payload, req.payload_len);
             }
             else // write command
             {
-                // Receive write payload
-                if(req.cmd_id == APP_CONTROL_CMD_CONFIG_OFFSET)
+                module_instance_control_t *module_control = get_module_control_instance(modules_control, req.res_id, num_modules);
+                // From the cmd_id, get the offset and size into the config struct
+                uint32_t offset, size;
+                get_control_cmd_config_offset(module_control, req.cmd_id, &offset, &size);
+                if(size != req.payload_len)
                 {
-                    chan_in_buf_byte(c_control, (uint8_t*)&current_config_offset, req.payload_len);
-                }
-                else if(req.cmd_id == APP_CONTROL_CMD_CONFIG)
-                {
-                    module_instance_control_t *module = get_module_control_instance(modules_control, req.res_id, num_modules);
-
-                    xassert(module != NULL);
-
-                    chan_in_buf_byte(c_control, (uint8_t*)module->config + current_config_offset, req.payload_len);
-                }
-                else
-                {
+                    printf("ERROR: payload_len mismatch. Expected %lu, but received %u\n", size, req.payload_len);
                     xassert(0);
                 }
+                // Receive write payload
+                chan_in_buf_byte(c_control, (uint8_t*)module_control->config + offset, req.payload_len);
             }
         }
         continue;
