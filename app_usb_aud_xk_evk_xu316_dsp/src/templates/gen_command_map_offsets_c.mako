@@ -1,4 +1,4 @@
-#include <platform.h>
+
 #include <stdio.h>
 
 %for name in cmd_map:

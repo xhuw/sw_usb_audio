@@ -9,8 +9,8 @@ static cmd_t commands[] =
     field_data["size"] = field_data["size"] if "size" in field_data else 1
     cmd_type = {'int32_t': 'TYPE_INT32', 'int16_t': 'TYPE_INT16', 'int8_t': 'TYPE_INT8'}
 %>\
- {"${name}_${field_name}", ${cmd_type[field_data["type"]]}, CMD_${name.upper()}_${field_name.upper()}, NUM_VALUES_${name.upper()}_${field_name.upper()}},
+ {0xff, "${name}_${field_name}", ${cmd_type[field_data["type"]]}, CMD_${name.upper()}_${field_name.upper()}, CMD_READ_WRITE, NUM_VALUES_${name.upper()}_${field_name.upper()}, "help", false},
     %endfor
 
 %endfor
-}
+};

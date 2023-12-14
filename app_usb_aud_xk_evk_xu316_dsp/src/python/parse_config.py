@@ -32,7 +32,7 @@ os.makedirs(f"{args.out_dir}/generator", exist_ok=True)
 
 struct_def_template = Template(filename=f'{templates_dir}/struct_def_h.mako')
 struct_offset_template = Template(filename=f'{templates_dir}/gen_command_map_offsets_c.mako')
-cmd_map_template = Template(filename=f'{templates_dir}/command_map_c.mako')
+cmd_map_template = Template(filename=f'{templates_dir}/host_cmd_map.mako')
 cmd_ids_template = Template(filename=f'{templates_dir}/cmds_h.mako')
 module_config_offsets_template = Template(filename=f'{templates_dir}/cmd_offsets_h.mako')
 
@@ -55,7 +55,7 @@ with open(f"{args.out_dir}/generator/gen_cmd_map_offset.c", "w") as f_op:
     f_op.write(struct_offset_template.render(cmd_map=cmd_map))
 
 # Generate cmd_map used by the host
-with open(f"{args.out_dir}/host/cmd_map.c", "w") as f_op:
+with open(f"{args.out_dir}/host/host_cmd_map.h", "w") as f_op:
     f_op.write(cmd_map_template.render(cmd_map=cmd_map))
 
 # Generate #defines present in the cmd map used by the host
