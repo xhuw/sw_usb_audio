@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <xassert.h>
 #include "debug_print.h"
-#include "dspt_parametric_eq.h"
+#include "parametric_eq.h"
 #include "xua_conf.h"
 
 // TODO duplicated defines!
@@ -12,7 +12,7 @@
 
 
 DSP_MODULE_PROCESS_ATTR
-void stage_filter_process(int32_t *input, int32_t *output, void *app_data_state, void *app_data_config)
+void parametric_eq_process(int32_t *input, int32_t *output, void *app_data_state, void *app_data_config)
 {
     xassert(app_data_state != NULL);
     parametric_eq_state_t *state = app_data_state;
@@ -30,7 +30,7 @@ void stage_filter_process(int32_t *input, int32_t *output, void *app_data_state,
 
 
 DSP_MODULE_INIT_ATTR
-module_instance_t* stage_filter_init(uint8_t id)
+module_instance_t* parametric_eq_init(uint8_t id)
 {
     module_instance_t *module_instance = malloc(sizeof(module_instance_t));
 
@@ -55,9 +55,10 @@ module_instance_t* stage_filter_init(uint8_t id)
 
     memcpy(config, &state->config, sizeof(parametric_eq_config_t));
 
+    module_instance->module_type = parametric_eq;
     module_instance->id = id;
     module_instance->state = state;
     module_instance->config = config;
-    module_instance->process_sample = stage_filter_process;
+    module_instance->process_sample = parametric_eq_process;
     return module_instance;
 }

@@ -1,5 +1,5 @@
-#ifndef ${name.upper()}_API_H
-#define ${name.upper()}_API_H
+#ifndef ${name.upper()}_CONFIG_H
+#define ${name.upper()}_CONFIG_H
 
 %for i in includes:
 #include <${i}>

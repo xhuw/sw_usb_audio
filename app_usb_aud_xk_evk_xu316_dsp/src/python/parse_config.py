@@ -45,7 +45,7 @@ for fl in files:
         struct_name=list(data["module"].keys())[0]
         includes = data["includes"] if "includes" in data else []
         defines = data["defines"] if "defines" in data else dict()
-        with open(f"{args.out_dir}/common/{struct_name}.h", "w") as f_op:
+        with open(f"{args.out_dir}/common/{struct_name}_config.h", "w") as f_op:
             f_op.write(struct_def_template.render(name=struct_name, data=data["module"][struct_name],
                                                   includes=includes, defines=defines))
 

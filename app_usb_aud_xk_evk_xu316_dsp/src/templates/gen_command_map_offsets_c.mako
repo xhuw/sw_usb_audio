@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 %for name in cmd_map:
-#include "${name}.h"
+#include "${name}_config.h"
 %endfor
 
 #if OFFSET_GEN

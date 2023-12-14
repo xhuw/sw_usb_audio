@@ -2,6 +2,7 @@
 #define DSPT_MODULE_H
 
 #include <stdint.h>
+#include <stdbool.h>
 #include "xua_conf.h" // For NUM_USB_CHAN_OUT and NUM_USB_CHAN_IN defines
 
 #define DSP_INPUT_CHANNELS (NUM_USB_CHAN_OUT + NUM_USB_CHAN_IN)
@@ -21,41 +22,31 @@ typedef void (*dsp_module_process)(int32_t *input, int32_t *output, void *state,
 
 typedef struct
 {
-    //all_dsp_modules_t module;
     uint32_t id;    // Unique module identifier assigned by the host
     void *state;    // Pointer to the module's state memory
     void *config;   // Pointer to the shared config memory between module and the control thread
     DSP_MODULE_PROCESS_ATTR dsp_module_process process_sample;  // Pointer to the module's process_sample() function
+    all_dsp_modules_t module_type;
 }module_instance_t;
 
-/*typedef struct
+typedef struct
 {
-    all_dsp_modules_t module;
+    all_dsp_modules_t module_type;
     uint32_t id;
     void *config;
-    bool dirty;
-    uint8_t cmd_id;
-}module_instance_control_t;*/
+    bool dirty; // flag specifying if the config has been written by the control thread
+    uint8_t cmd_id; // cmd_id of the last command that was sent to this module instance. Valid only if dirty = true
+}module_instance_control_t;
 
 
 #define DSP_MODULE_INIT_ATTR  __attribute__((fptrgroup("dsp_module_init_fptr_grp")))
 typedef module_instance_t* (*dsp_module_init)(uint8_t id);
 
 
-// Function declaration
-DSP_MODULE_INIT_ATTR
-module_instance_t* DSP_MODULE_INIT_ATTR create_module_instance(all_dsp_modules_t dsp_module, uint8_t id);
-
 typedef struct
 {
     uint8_t instance_id;
-    all_dsp_modules_t module;
+    DSP_MODULE_INIT_ATTR dsp_module_init module_init_function;  // Pointer to the module's init function
 }module_info_t;
-
-typedef struct {
-    uint32_t cmd_id; // CmdID
-    uint32_t offset;    // offset
-    uint32_t size;      //size
-}module_config_offsets_t;
 
 #endif

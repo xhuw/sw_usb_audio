@@ -5,7 +5,7 @@
 
 #include "cmds.h"
 %for name in cmd_map:
-#include "${name}.h"
+#include "${name}_config.h"
 %endfor
 
 %for name, data in cmd_map.items():
