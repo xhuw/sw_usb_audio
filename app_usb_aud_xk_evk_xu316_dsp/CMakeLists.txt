@@ -4,7 +4,7 @@ project(app_usb_aud_xk_evk_xu316_dsp)
 
 
 set( AUTOGEN_DIR ${CMAKE_CURRENT_BINARY_DIR}/src.autogen )
-file( GLOB MODULE_CONFIG_YAML_FILES  ${CMAKE_CURRENT_LIST_DIR}/src/yaml/*.yaml )
+file( GLOB MODULE_CONFIG_YAML_FILES  ${CMAKE_CURRENT_LIST_DIR}/build/dsp_design/yaml/*.yaml )
 file(GLOB TEMPLATE_FILES ${CMAKE_CURRENT_LIST_DIR}/src/templates/*.mako)
 unset(CMD_MAP_GEN_ARGS)
 list(APPEND CMD_MAP_GEN_ARGS --out-dir ${AUTOGEN_DIR})
@@ -43,6 +43,12 @@ set(SW_USB_AUDIO_FLAGS ${EXTRA_BUILD_FLAGS} -fcomment-asm
 set(APP_COMPILER_FLAGS_1AMi2o2xxxxxx ${SW_USB_AUDIO_FLAGS} -DAUDIO_CLASS=1)
 
 set(APP_COMPILER_FLAGS_2AMi2o2xxxxxx ${SW_USB_AUDIO_FLAGS})
+
+
+file(GLOB C_SRC RELATIVE ${CMAKE_CURRENT_LIST_DIR} src/*.c)
+
+set(APP_C_SRCS "${C_SRC};build/dsp_pipeline/dsp_main.c")
+message(APP_C_SRCS "${APP_C_SRCS}")
 
 #set(APP_COMPILER_FLAGS_test ${SW_USB_AUDIO_FLAGS} -DOFFSET_GEN=1 -DEXCLUDE_USB_AUDIO_MAIN -fcmdline-buffer-bytes=512)
 

@@ -1,2 +1,4 @@
 pyyaml
 mako
+-e ./dsp_ultra
+notebook
