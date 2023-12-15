@@ -15,9 +15,6 @@
 #include "agc.h"
 
 
-DECLARE_JOB(dsp_data_transport_thread, (chanend_t, chanend_t, chanend_t));
-DECLARE_JOB(dsp_control_thread, (chanend_t, module_instance_t **, size_t));
-DECLARE_JOB(dsp_thread, (chanend_t, chanend_t, module_instance_t**, size_t));
 
 
 void dsp_data_transport_thread(chanend_t c_data, chanend_t c_start, chanend_t c_end)
@@ -58,4 +55,4 @@ void dsp_data_transport_thread(chanend_t c_data, chanend_t c_start, chanend_t c_
     }
 }
 
-#include "autogen_main.inc"
+//#include "autogen_main.inc"
