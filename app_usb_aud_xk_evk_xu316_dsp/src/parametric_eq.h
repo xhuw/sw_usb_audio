@@ -1,5 +1,5 @@
-#ifndef FILTER_MODULE_H
-#define FILTER_MODULE_H
+#ifndef PARAMETRIC_EQ_H
+#define PARAMETRIC_EQ_H
 
 #include "dspt_module.h"
 #include "dsp.h"

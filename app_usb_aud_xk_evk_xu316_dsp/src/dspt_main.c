@@ -12,6 +12,8 @@
 #include "dspt_module.h"
 #include "dspt_control.h"
 #include "parametric_eq.h"
+#include "agc.h"
+
 
 DECLARE_JOB(dsp_data_transport_thread, (chanend_t, chanend_t, chanend_t));
 DECLARE_JOB(dsp_control_thread, (chanend_t, module_instance_t **, size_t));
@@ -83,7 +85,7 @@ void dspt_xcore_main(chanend_t c_data, chanend_t c_control)
     info_thread1[1].module_init_function = parametric_eq_init;
 
     info_thread2[0].instance_id = 3;
-    info_thread2[0].module_init_function = parametric_eq_init;
+    info_thread2[0].module_init_function = agc_init;
 
     const int32_t total_num_modules = num_modules_thread1 + num_modules_thread2;
     module_instance_t *modules[total_num_modules]; // Array of pointers to module instances

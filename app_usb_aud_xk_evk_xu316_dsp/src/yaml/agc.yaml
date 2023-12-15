@@ -1,7 +1,7 @@
 module:
   agc:
     gain:
-      type: int32_t
+      type: float
 includes:
   - stdint.h
   - "dspt_module.h"
