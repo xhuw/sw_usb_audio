@@ -21,6 +21,7 @@ typedef enum
 {
     config_read_pending,    // Control waiting to read the updated config from DSP
     config_write_pending,   // Config written by control and waiting for DSP to update
+    config_read_updated,    // Config updated with the latest in order to service a read command
     config_none_pending     // All done. Control and DSP not waiting on anything.
 }config_rw_state_t;
 

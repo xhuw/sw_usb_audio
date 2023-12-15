@@ -55,5 +55,10 @@ void agc_process(int32_t *input, int32_t *output, void *app_data_state, module_c
         memcpy(&state->config, config, sizeof(agc_config_t));
         control->config_rw_state = config_none_pending;
     }
+    else if(control->config_rw_state == config_read_pending)
+    {
+        memcpy(config, &state->config, sizeof(agc_config_t));
+        control->config_rw_state = config_read_updated;
+    }
 }
 

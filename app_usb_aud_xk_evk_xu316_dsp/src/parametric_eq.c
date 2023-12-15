@@ -35,6 +35,11 @@ void parametric_eq_process(int32_t *input, int32_t *output, void *app_data_state
         memcpy(&state->config, config, sizeof(parametric_eq_config_t));
         control->config_rw_state = config_none_pending;
     }
+    else if(control->config_rw_state == config_read_pending)
+    {
+        memcpy(config, &state->config, sizeof(parametric_eq_config_t));
+        control->config_rw_state = config_read_updated;
+    }
 }
 
 
