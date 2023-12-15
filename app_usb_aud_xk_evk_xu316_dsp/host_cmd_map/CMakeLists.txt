@@ -9,6 +9,7 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED On)
 set(CMAKE_CXX_EXTENSIONS Off)
 
+
 set(RELEASE_DIR ${CMAKE_CURRENT_LIST_DIR}/../../../../build/release)
 
 if((UNIX AND NOT APPLE) AND (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "armv7l"))
@@ -33,9 +34,10 @@ enable_language(CXX C)
 #*********************************************************
 # Autogenerate files from the cmds .yaml file
 #*********************************************************
-set(XU316_DSP_APP_PATH ${CMAKE_CURRENT_LIST_DIR}/../app_usb_aud_xk_evk_xu316_dsp)
+set(XU316_DSP_APP_PATH ${CMAKE_CURRENT_LIST_DIR}/../)
 set( AUTOGEN_DIR ${CMAKE_CURRENT_BINARY_DIR}/src.autogen )
-file( GLOB MODULE_CONFIG_YAML_FILES  ${XU316_DSP_APP_PATH}/src/yaml/*.yaml )
+#file( GLOB MODULE_CONFIG_YAML_FILES  ${XU316_DSP_APP_PATH}/src/yaml/*.yaml )
+file( GLOB MODULE_CONFIG_YAML_FILES  ${XU316_DSP_APP_PATH}/build/dsp_pipeline/yaml/*.yaml )
 file(GLOB TEMPLATE_FILES ${XU316_DSP_APP_PATH}/src/templates/*.mako)
 unset(CMD_MAP_GEN_ARGS)
 list(APPEND CMD_MAP_GEN_ARGS --out-dir ${AUTOGEN_DIR})
@@ -63,7 +65,7 @@ add_executable(${NUM_VALUES_GEN_APP})
 add_dependencies(${NUM_VALUES_GEN_APP} cmd_map_generation)
 target_sources(${NUM_VALUES_GEN_APP} PRIVATE ${OUTPUT_C_FILES})
 target_include_directories(${NUM_VALUES_GEN_APP} PRIVATE ${XU316_DSP_APP_PATH}/src ${XU316_DSP_APP_PATH}/src/core
-                ${AUTOGEN_DIR} ${CMAKE_CURRENT_LIST_DIR}/../../lib_dsp/lib_dsp/api ${AUTOGEN_DIR}/common ${AUTOGEN_DIR}/device ${AUTOGEN_DIR}/generator)
+                ${AUTOGEN_DIR} ${CMAKE_CURRENT_LIST_DIR}/../../../lib_dsp/lib_dsp/api ${AUTOGEN_DIR}/common ${AUTOGEN_DIR}/device ${AUTOGEN_DIR}/generator)
 target_compile_options(${NUM_VALUES_GEN_APP} PRIVATE -DOFFSET_GEN=1 -g)
 
 
