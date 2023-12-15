@@ -22,6 +22,7 @@ typedef struct {
 
 static module_instance_t* get_module_control_instance(module_instance_t **modules, uint32_t res_id, size_t num_modules)
 {
+    //printf("res id = %d\n", res_id);
     for(int i=0; i<num_modules; i++)
     {
         if(modules[i]->id == res_id)
@@ -29,11 +30,14 @@ static module_instance_t* get_module_control_instance(module_instance_t **module
             return modules[i];
         }
     }
+    printf("ERROR: Cannot find a module for the instance-id %lu\n", res_id);
+    xassert(0);
     return NULL;
 }
 
 static void get_control_cmd_config_offset(module_instance_t *module, uint8_t cmd_id, uint32_t *offset, uint32_t *size)
 {
+    //printf("cmd id = %d\n", cmd_id);
     all_dsp_modules_t module_type = module->module_type;
     module_config_offsets_t *config_offsets = ptr_module_offsets[module_type];
 
