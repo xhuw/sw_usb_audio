@@ -17,7 +17,7 @@ typedef struct
 // Public functions
 DSP_MODULE_INIT_ATTR module_instance_t* agc_init(uint8_t id);
 
-void agc_process(int32_t *input, int32_t *output, void *app_data_state, module_control_t *control);
+void agc_process(int32_t **input, int32_t **output, void *app_data_state, module_control_t *control);
 
 
 #endif

@@ -1,6 +1,5 @@
 from ..design.stage import Stage
 
-# Copied from Shuchita's branch of usb audio
 AGC_CONFIG = """
 ---
 module:
@@ -28,4 +27,8 @@ class AGC(Stage):
         Returns:
             list of numpy arrays.
         """
+        ret = []
+        for channel in in_channels:
+            ret.append(channel * self["gain"])
+        return ret
 

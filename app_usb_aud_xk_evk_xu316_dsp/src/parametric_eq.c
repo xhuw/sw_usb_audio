@@ -13,7 +13,7 @@
 
 
 DSP_MODULE_PROCESS_ATTR
-void parametric_eq_process(int32_t *input, int32_t *output, void *app_data_state, module_control_t *control)
+void parametric_eq_process(int32_t **input, int32_t **output, void *app_data_state, module_control_t *control)
 {
     xassert(app_data_state != NULL);
     parametric_eq_state_t *state = app_data_state;
@@ -23,7 +23,7 @@ void parametric_eq_process(int32_t *input, int32_t *output, void *app_data_state
     // 4 biquads over 4 samples take 290 reference timer cycles
     for(int i=0; i<state->config.num_outputs; i++)
     {
-        output[i] = dsp_filters_biquads (( int32_t ) input[i + state->config.input_start_offset],
+        output[i][0] = dsp_filters_biquads (( int32_t ) input[i + state->config.input_start_offset][0],
                                                         state->config.filter_coeffs ,
                                                         state->filter_states[i],
                                                         FILTERS ,

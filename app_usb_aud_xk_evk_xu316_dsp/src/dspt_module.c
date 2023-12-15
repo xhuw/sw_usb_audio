@@ -16,7 +16,7 @@ void dsp_thread(chanend_t c_source, chanend_t c_dest, module_instance_t** module
         chan_in_buf_word(c_source, (uint32_t*)input_ptr, DSP_INPUT_CHANNELS);
         for(int i=0; i<num_modules; i++)
         {
-            modules[i]->process_sample(input_ptr, output_ptr, modules[i]->state, &modules[i]->control);
+            modules[i]->process_sample(&input_ptr, &output_ptr, modules[i]->state, &modules[i]->control);
 
             if(i < num_modules-1) // If we have more iterations
             {
