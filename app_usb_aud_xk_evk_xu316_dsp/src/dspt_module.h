@@ -17,21 +17,33 @@ typedef enum
     num_dsp_modules
 }all_dsp_modules_t;
 
+typedef enum
+{
+    config_read_pending,    // Control waiting to read the updated config from DSP
+    config_write_pending,   // Config written by control and waiting for DSP to update
+    config_none_pending     // All done. Control and DSP not waiting on anything.
+}config_rw_state_t;
+
+// Control related information shared between control thread and DSP
+typedef struct
+{
+    void *config;
+    uint32_t id;    // Unique module identifier assigned by the host
+    uint32_t num_control_commands;
+    all_dsp_modules_t module_type;
+    uint8_t cmd_id;
+    config_rw_state_t config_rw_state;
+}module_control_t;
+
 #define DSP_MODULE_PROCESS_ATTR  __attribute__((fptrgroup("dsp_module_process_fptr_grp")))
-typedef void (*dsp_module_process)(int32_t *input, int32_t *output, void *state, void *config, bool config_dirty, uint8_t cmd);
+typedef void (*dsp_module_process)(int32_t *input, int32_t *output, void *state, module_control_t *control);
 
 typedef struct
 {
-    uint32_t id;    // Unique module identifier assigned by the host
     void *state;    // Pointer to the module's state memory
     DSP_MODULE_PROCESS_ATTR dsp_module_process process_sample;  // Pointer to the module's process_sample() function
-
     // For control
-    void *config;   // Pointer to the shared config memory between module and the control thread
-    all_dsp_modules_t module_type;
-    uint32_t num_control_commands;
-    bool dirty;
-    uint8_t cmd_id;
+    module_control_t control;
 }module_instance_t;
 
 
@@ -44,5 +56,6 @@ typedef struct
     uint8_t instance_id;
     DSP_MODULE_INIT_ATTR dsp_module_init module_init_function;  // Pointer to the module's init function
 }module_info_t;
+
 
 #endif

@@ -23,32 +23,37 @@ module_instance_t* agc_init(uint8_t id)
     state->config.gain = 1.0;
     memcpy(config, &state->config, sizeof(agc_config_t));
 
-    module_instance->module_type = agc;
-    module_instance->id = id;
     module_instance->state = state;
-    module_instance->config = config;
     module_instance->process_sample = agc_process;
-    module_instance->num_control_commands = NUM_CMDS_AGC;
-    module_instance->dirty = false;
+
+    // Control stuff
+    module_instance->control.config = config;
+    module_instance->control.id = id;
+    module_instance->control.module_type = agc;
+    module_instance->control.num_control_commands = NUM_CMDS_AGC;
+    module_instance->control.config_rw_state = config_none_pending;
     return module_instance;
 }
 
 DSP_MODULE_PROCESS_ATTR
-void agc_process(int32_t *input, int32_t *output, void *app_data_state, void *app_data_config, bool config_dirty, uint8_t cmd)
+void agc_process(int32_t *input, int32_t *output, void *app_data_state, module_control_t *control)
 {
     xassert(app_data_state != NULL);
     agc_state_t *state = app_data_state;
-    xassert(app_data_config != NULL);
-    agc_config_t *config = app_data_config;
+    xassert(control != NULL);
+    agc_config_t *config = control->config;
 
     // 4 biquads over 4 samples take 290 reference timer cycles
     for(int i=0; i<DSP_OUTPUT_CHANNELS; i++)
     {
         output[i] = (int32_t)(input[i] * state->config.gain);
     }
-    if(config_dirty == true)
+
+    if(control->config_rw_state == config_write_pending)
     {
+        // Finish the write by updating the working copy with the new config
         memcpy(&state->config, config, sizeof(agc_config_t));
+        control->config_rw_state = config_none_pending;
     }
 }
 

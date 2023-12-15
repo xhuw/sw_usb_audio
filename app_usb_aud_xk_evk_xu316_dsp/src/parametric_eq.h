@@ -18,7 +18,7 @@ typedef struct
 // Public functions
 DSP_MODULE_INIT_ATTR module_instance_t* parametric_eq_init(uint8_t id);
 
-DSP_MODULE_PROCESS_ATTR  void parametric_eq_process(int32_t *input, int32_t *output, void *app_data_state, void *app_data_config, bool config_dirty, uint8_t cmd);
+DSP_MODULE_PROCESS_ATTR  void parametric_eq_process(int32_t *input, int32_t *output, void *app_data_state, module_control_t *control);
 
 
 #endif

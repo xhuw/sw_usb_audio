@@ -25,7 +25,7 @@ static module_instance_t* get_module_control_instance(module_instance_t **module
     //printf("res id = %d\n", res_id);
     for(int i=0; i<num_modules; i++)
     {
-        if(modules[i]->id == res_id)
+        if(modules[i]->control.id == res_id)
         {
             return modules[i];
         }
@@ -38,10 +38,10 @@ static module_instance_t* get_module_control_instance(module_instance_t **module
 static void get_control_cmd_config_offset(module_instance_t *module, uint8_t cmd_id, uint32_t *offset, uint32_t *size)
 {
     //printf("cmd id = %d\n", cmd_id);
-    all_dsp_modules_t module_type = module->module_type;
+    all_dsp_modules_t module_type = module->control.module_type;
     module_config_offsets_t *config_offsets = ptr_module_offsets[module_type];
 
-    for(int i=0; i<module->num_control_commands; i++)
+    for(int i=0; i<module->control.num_control_commands; i++)
     {
         if(cmd_id == (uint8_t)config_offsets[i].cmd_id)
         {
@@ -83,7 +83,7 @@ void dsp_control_thread(chanend_t c_control, module_instance_t** modules, size_t
                     xassert(0);
                 }
                 payload[0] = 0; // status
-                memcpy((uint8_t*)&payload[1], (uint8_t*)module->config + offset, size);
+                memcpy((uint8_t*)&payload[1], (uint8_t*)module->control.config + offset, size);
                 chan_out_buf_byte(c_control, (uint8_t*)payload, req.payload_len);
             }
             else // write command
@@ -98,16 +98,16 @@ void dsp_control_thread(chanend_t c_control, module_instance_t** modules, size_t
                     printf("ERROR: payload_len mismatch. Expected %lu, but received %u\n", size, req.payload_len);
                     xassert(0);
                 }
-                if(module->dirty == false)
+                if(module->control.config_rw_state == config_none_pending)
                 {
                     // Receive write payload
-                    chan_in_buf_byte(c_control, (uint8_t*)module->config + offset, req.payload_len);
-                    module->cmd_id = req.cmd_id;
-                    module->dirty = true;
+                    chan_in_buf_byte(c_control, (uint8_t*)module->control.config + offset, req.payload_len);
+                    module->control.cmd_id = req.cmd_id;
+                    module->control.config_rw_state = config_write_pending;
                 }
                 else
                 {
-                    chan_in_buf_byte(c_control, (uint8_t*)payload, req.payload_len);
+                    chan_in_buf_byte(c_control, (uint8_t*)payload, req.payload_len); // Copy write payload to temp buffer and discard
                     printf("ERROR: Previous write to the config not applied by the module!! Ignoring write command.");
                 }
             }

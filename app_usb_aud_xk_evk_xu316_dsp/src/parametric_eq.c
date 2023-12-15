@@ -13,12 +13,12 @@
 
 
 DSP_MODULE_PROCESS_ATTR
-void parametric_eq_process(int32_t *input, int32_t *output, void *app_data_state, void *app_data_config, bool config_dirty, uint8_t cmd)
+void parametric_eq_process(int32_t *input, int32_t *output, void *app_data_state, module_control_t *control)
 {
     xassert(app_data_state != NULL);
     parametric_eq_state_t *state = app_data_state;
-    xassert(app_data_config != NULL);
-    parametric_eq_config_t *config = app_data_config;
+    xassert(control != NULL);
+    parametric_eq_config_t *config = control->config;
 
     // 4 biquads over 4 samples take 290 reference timer cycles
     for(int i=0; i<state->config.num_outputs; i++)
@@ -29,9 +29,11 @@ void parametric_eq_process(int32_t *input, int32_t *output, void *app_data_state
                                                         FILTERS ,
                                                         28);
     }
-    if(config_dirty == true)
+    if(control->config_rw_state == config_write_pending)
     {
+        // Finish the write by updating the working copy with the new config
         memcpy(&state->config, config, sizeof(parametric_eq_config_t));
+        control->config_rw_state = config_none_pending;
     }
 }
 
@@ -60,12 +62,14 @@ module_instance_t* parametric_eq_init(uint8_t id)
 
     memcpy(config, &state->config, sizeof(parametric_eq_config_t));
 
-    module_instance->module_type = parametric_eq;
-    module_instance->id = id;
     module_instance->state = state;
-    module_instance->config = config;
     module_instance->process_sample = parametric_eq_process;
-    module_instance->num_control_commands = NUM_CMDS_PARAMETRIC_EQ;
-    module_instance->dirty = false;
+
+    // Control stuff
+    module_instance->control.config = config;
+    module_instance->control.id = id;
+    module_instance->control.module_type = parametric_eq;
+    module_instance->control.num_control_commands = NUM_CMDS_PARAMETRIC_EQ;
+    module_instance->control.config_rw_state = config_none_pending;
     return module_instance;
 }
