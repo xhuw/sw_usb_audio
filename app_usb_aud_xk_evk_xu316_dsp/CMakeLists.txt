@@ -4,8 +4,8 @@ project(app_usb_aud_xk_evk_xu316_dsp)
 
 
 set( AUTOGEN_DIR ${CMAKE_CURRENT_BINARY_DIR}/src.autogen )
-#file( GLOB MODULE_CONFIG_YAML_FILES  ${CMAKE_CURRENT_LIST_DIR}/src/yaml/*.yaml )
-file( GLOB MODULE_CONFIG_YAML_FILES  ${CMAKE_CURRENT_LIST_DIR}/build/dsp_design/yaml/*.yaml )
+file( GLOB MODULE_CONFIG_YAML_FILES  ${CMAKE_CURRENT_LIST_DIR}/src/yaml/*.yaml )
+#file( GLOB MODULE_CONFIG_YAML_FILES  ${CMAKE_CURRENT_LIST_DIR}/build/dsp_design/yaml/*.yaml )
 file(GLOB TEMPLATE_FILES ${CMAKE_CURRENT_LIST_DIR}/src/templates/*.mako)
 unset(CMD_MAP_GEN_ARGS)
 list(APPEND CMD_MAP_GEN_ARGS --out-dir ${AUTOGEN_DIR})

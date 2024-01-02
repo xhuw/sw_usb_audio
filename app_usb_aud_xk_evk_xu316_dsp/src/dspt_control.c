@@ -9,6 +9,7 @@
 #include <xcore/select.h>
 #include "dspt_control.h"
 #include "dspt_module.h"
+#include "xud_std_requests.h" // For USB_BMREQ_D2H_VENDOR_DEV and USB_BMREQ_H2D_VENDOR_DEV defines
 
 typedef struct {
     uint32_t cmd_id; // CmdID
@@ -55,7 +56,7 @@ static void get_control_cmd_config_offset(module_instance_t *module, uint8_t cmd
 }
 
 
-#define MAX_CONTROL_PAYLOAD_LEN 64
+#define MAX_CONTROL_PAYLOAD_LEN 256
 void dsp_control_thread(chanend_t c_control, module_instance_t** modules, size_t num_modules)
 {
     int8_t payload[MAX_CONTROL_PAYLOAD_LEN] = {0};
@@ -113,23 +114,33 @@ void dsp_control_thread(chanend_t c_control, module_instance_t** modules, size_t
                 // From the cmd_id, get the offset and size into the config struct
                 uint32_t offset, size;
                 get_control_cmd_config_offset(module, req.cmd_id, &offset, &size);
-                if(size != req.payload_len)
+
+                if(req.direction == USB_BMREQ_D2H_VENDOR_DEV) // Read request for a write command. This is the host querying the status of the write
                 {
-                    printf("ERROR: payload_len mismatch. Expected %lu, but received %u\n", size, req.payload_len);
-                    xassert(0);
+                    payload[0] = 0; // CONTROL_SUCCESS for now
+                    chan_out_buf_byte(c_control, payload, req.payload_len);
                 }
-                if(module->control.config_rw_state == config_none_pending)
+                else    // Write request for a write command
                 {
-                    // Receive write payload
-                    chan_in_buf_byte(c_control, (uint8_t*)module->control.config + offset, req.payload_len);
-                    module->control.cmd_id = req.cmd_id;
-                    module->control.config_rw_state = config_write_pending;
+                    if(module->control.config_rw_state == config_none_pending)
+                    {
+                        // Receive write payload
+                        chan_in_buf_byte(c_control, (uint8_t*)module->control.config + offset, req.payload_len);
+                        module->control.cmd_id = req.cmd_id;
+                        module->control.config_rw_state = config_write_pending;
+                    }
+                    else
+                    {
+                        chan_in_buf_byte(c_control, (uint8_t*)payload, req.payload_len); // Copy write payload to temp buffer and discard
+                        printf("WARNING: Previous write to the config not applied by the module!! Ignoring write command.");
+                    }
+                    if(size != req.payload_len)
+                    {
+                        printf("ERROR: payload_len mismatch. Expected %lu, but received %u\n", size, req.payload_len);
+                        xassert(0);
+                    }
                 }
-                else
-                {
-                    chan_in_buf_byte(c_control, (uint8_t*)payload, req.payload_len); // Copy write payload to temp buffer and discard
-                    printf("ERROR: Previous write to the config not applied by the module!! Ignoring write command.");
-                }
+
             }
         }
         continue;

@@ -57,6 +57,8 @@ module_instance_t* parametric_eq_init(uint8_t id)
     const int32_t DWORD_ALIGNED filter_coeffs [ FILTERS * DSP_NUM_COEFFS_PER_BIQUAD] = {
     261565110 , -521424736 , 260038367 , 521424736 , -253168021 ,
     255074543 , -506484921 , 252105451 , 506484921 , -238744538 ,
+    280274501 , -523039333 , 245645878 , 523039333 , -257484924 ,
+    291645146 , -504140302 , 223757950 , 504140302 , -246967640 ,
     };
 
     memcpy(state->config.filter_coeffs, filter_coeffs, sizeof(filter_coeffs));

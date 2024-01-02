@@ -20,7 +20,7 @@ includes:
   - "dsp.h"
   - "dspt_module.h"
 defines:
-  FILTERS: 2
+  FILTERS: 4
 """
 
 class ParametricEq(Stage):

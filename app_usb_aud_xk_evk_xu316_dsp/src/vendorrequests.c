@@ -15,7 +15,6 @@
 
 void VendorRequests_Init(VENDOR_REQUESTS_PARAMS_DEC)
 {
-    //printintln(9876);
     chanend_t c = c_control;
     chan_out_byte(c, 88);
 }
@@ -31,9 +30,9 @@ int VendorRequests(XUD_ep ep0_out, XUD_ep ep0_in, USB_SetupPacket_t *sp VENDOR_R
 
     switch ((sp->bmRequestType.Direction << 7) | (sp->bmRequestType.Type << 5) | (sp->bmRequestType.Recipient)) {
         case USB_BMREQ_H2D_VENDOR_DEV:
-
             if (sp->wLength <= EP0_MAX_REQUEST_SIZE) {
                 control_req_t req;
+                req.direction = USB_BMREQ_H2D_VENDOR_DEV;
                 req.res_id = sp->wIndex;
                 req.cmd_id = sp->wValue;
                 req.payload_len = sp->wLength;
@@ -64,6 +63,7 @@ int VendorRequests(XUD_ep ep0_out, XUD_ep ep0_in, USB_SetupPacket_t *sp VENDOR_R
              */
             len = sp->wLength;
             control_req_t req;
+            req.direction = USB_BMREQ_D2H_VENDOR_DEV;
             req.res_id = sp->wIndex;
             req.cmd_id = sp->wValue;
             req.payload_len = sp->wLength;
