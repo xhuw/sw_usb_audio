@@ -1,4 +1,4 @@
 pyyaml
 mako
--e ./dsp_ultra
+-e ../../lib_audio_dsp/python
 notebook
