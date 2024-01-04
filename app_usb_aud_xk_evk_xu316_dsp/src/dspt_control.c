@@ -20,7 +20,7 @@ typedef struct {
 
 #define SERVICER_COMMAND_RETRY (64) // From XVF3800 since reusing host app
 
-static module_instance_t* get_module_control_instance(module_instance_t **modules, uint32_t res_id, size_t num_modules)
+static module_instance_t* get_module_instance(module_instance_t **modules, uint32_t res_id, size_t num_modules)
 {
     //printf("res id = %d\n", res_id);
     for(int i=0; i<num_modules; i++)
@@ -55,11 +55,106 @@ static void get_control_cmd_config_offset(module_instance_t *module, uint8_t cmd
     return;
 }
 
+// All the Control command information
+typedef struct
+{
+    uint8_t instance_id;
+    uint8_t cmd_id;
+    uint16_t payload_len;
+    int8_t *payload;
+}adsp_stage_control_cmd_t;
+
+typedef enum
+{
+    ADSP_CONTROL_SUCCESS,
+    ADSP_CONTROL_BUSY,
+    ADSP_CONTROL_ERROR
+}adsp_control_status_t;
+
+// Read a module instance's config structure for a given command ID
+adsp_control_status_t adsp_read_module_config(module_instance_t** modules, // Array of module instance pointers
+                                            size_t num_modules, // Total number of modules
+                                            adsp_stage_control_cmd_t *cmd
+                                        )
+{
+    module_instance_t *module = get_module_instance(modules, cmd->instance_id, num_modules);
+    uint32_t offset, size;
+    // Get offset into the module's config structure for this command
+    get_control_cmd_config_offset(module, cmd->cmd_id, &offset, &size);
+    if(size != cmd->payload_len)
+    {
+        debug_printf("ERROR: payload_len mismatch. Expected %lu, but received %u\n", size, cmd->payload_len);
+        xassert(0);
+    }
+    config_rw_state_t config_state = module->control.config_rw_state;
+    if((config_state == config_none_pending) || (config_state == config_read_pending)) // No command pending or read pending
+    {
+        if(config_state == config_none_pending)
+        {
+            // Inform the module of the read so it can update config with the latest data
+            module->control.cmd_id = cmd->cmd_id;
+            module->control.config_rw_state = config_read_pending;
+        }
+        // Return RETRY as status
+        return ADSP_CONTROL_BUSY;
+    }
+    else if(config_state == config_read_updated)
+    {
+        // Confirm same cmd_id
+        xassert(module->control.cmd_id == cmd->cmd_id);
+        // Update payload
+        memcpy((uint8_t*)&cmd->payload[0], (uint8_t*)module->control.config + offset, size);
+        module->control.config_rw_state = config_none_pending;
+        return ADSP_CONTROL_SUCCESS;
+    }
+    // Should never come here
+    debug_printf("adsp_read_module_config(): Unexpected config state %d\n", config_state);
+    xassert(0);
+    return ADSP_CONTROL_ERROR;
+}
+
+
+// Write to a module instance's config structure for a given command ID
+adsp_control_status_t adsp_write_module_config(module_instance_t** modules, // Array of module instance pointers
+                                            size_t num_modules, // Total number of modules
+                                            adsp_stage_control_cmd_t *cmd
+                                        )
+{
+    module_instance_t *module = get_module_instance(modules, cmd->instance_id, num_modules);
+    uint32_t offset, size;
+    // Get offset into the module's config structure for this command
+    get_control_cmd_config_offset(module, cmd->cmd_id, &offset, &size);
+    if(size != cmd->payload_len)
+    {
+        debug_printf("ERROR: payload_len mismatch. Expected %lu, but received %u\n", size, cmd->payload_len);
+        xassert(0);
+    }
+
+    config_rw_state_t config_state = module->control.config_rw_state;
+    if(config_state == config_none_pending)
+    {
+        // Receive write payload
+        memcpy((uint8_t*)module->control.config + offset, cmd->payload, cmd->payload_len);
+        module->control.cmd_id = cmd->cmd_id;
+        module->control.config_rw_state = config_write_pending;
+        return ADSP_CONTROL_SUCCESS;
+    }
+    else
+    {
+        debug_printf("WARNING: Previous write to the config not applied by the module!! Ignoring write command.");
+        return ADSP_CONTROL_BUSY;
+    }
+}
+
+
+
 
 #define MAX_CONTROL_PAYLOAD_LEN 256
 void dsp_control_thread(chanend_t c_control, module_instance_t** modules, size_t num_modules)
 {
     int8_t payload[MAX_CONTROL_PAYLOAD_LEN] = {0};
+    uint8_t prev_write_cmd_status = 0;
+
     uint8_t temp = chan_in_byte(c_control);
     printf("dsp_control_thread received init token %d\n", temp);
 
@@ -72,72 +167,48 @@ void dsp_control_thread(chanend_t c_control, module_instance_t** modules, size_t
             chan_in_buf_byte(c_control, (uint8_t*)&req, sizeof(control_req_t));
             if(req.cmd_id & 0x80) // Read command
             {
-                //printf("Read command\n");
-                module_instance_t *module = get_module_control_instance(modules, req.res_id, num_modules);
-                // From the cmd_id, get the offset and size into the config struct
-                uint32_t offset, size;
-                get_control_cmd_config_offset(module, (req.cmd_id & 0x7f), &offset, &size);
-                if(size != req.payload_len - 1) // 1 extra payload byte to return status in
-                {
-                    printf("ERROR: payload_len mismatch. Expected %lu, but received %u\n", size, req.payload_len);
-                    xassert(0);
-                }
+                adsp_stage_control_cmd_t cmd;
+                cmd.instance_id = req.res_id;
+                cmd.cmd_id = req.cmd_id & 0x7f;
+                cmd.payload_len = req.payload_len - 1; // 1 extra byte for status
+                cmd.payload = &payload[1]; // payload[0] reserved for read command status
 
-                config_rw_state_t config_state = module->control.config_rw_state;
-                if((config_state == config_none_pending) || (config_state == config_read_pending)) // No command pending or read pending
+                adsp_control_status_t ret = adsp_read_module_config(modules, num_modules, &cmd);
+                if(ret == ADSP_CONTROL_BUSY)
                 {
-                    if(config_state == config_none_pending)
-                    {
-                        // Inform the module of the read so it can update config with the latest data
-                        module->control.cmd_id = req.cmd_id & 0x7f;
-                        module->control.config_rw_state = config_read_pending;
-                    }
-
                     // Return RETRY as status
                     payload[0] = SERVICER_COMMAND_RETRY;
                     chan_out_buf_byte(c_control, (uint8_t*)payload, req.payload_len);
                 }
-                else if(config_state == config_read_updated)
+                else if(ret == ADSP_CONTROL_SUCCESS)
                 {
-                    // Confirm same cmd_id
-                    xassert(module->control.cmd_id == (req.cmd_id & 0x7f));
-                    payload[0] = 0; // status
-                    memcpy((uint8_t*)&payload[1], (uint8_t*)module->control.config + offset, size);
-                    module->control.config_rw_state = config_none_pending;
+                    payload[0] = 0; // status success
                     chan_out_buf_byte(c_control, (uint8_t*)payload, req.payload_len);
                 }
             }
             else // write command
             {
-                //printf("Write command. res_id %d\n", req.res_id);
-                module_instance_t *module = get_module_control_instance(modules, req.res_id, num_modules);
-                // From the cmd_id, get the offset and size into the config struct
-                uint32_t offset, size;
-                get_control_cmd_config_offset(module, req.cmd_id, &offset, &size);
-
                 if(req.direction == USB_BMREQ_D2H_VENDOR_DEV) // Read request for a write command. This is the host querying the status of the write
                 {
-                    payload[0] = 0; // CONTROL_SUCCESS for now
-                    chan_out_buf_byte(c_control, payload, req.payload_len);
+                    payload[0] = prev_write_cmd_status;
+                    chan_out_buf_byte(c_control, (const uint8_t*)payload, req.payload_len);
                 }
                 else    // Write request for a write command
                 {
-                    if(module->control.config_rw_state == config_none_pending)
+                    chan_in_buf_byte(c_control, (uint8_t*)payload, req.payload_len);
+
+                    adsp_stage_control_cmd_t cmd;
+                    cmd.instance_id = req.res_id;
+                    cmd.cmd_id = req.cmd_id;
+                    cmd.payload_len = req.payload_len;
+                    cmd.payload = &payload[0];
+
+                    adsp_control_status_t ret = adsp_write_module_config(modules, num_modules, &cmd);
+                    prev_write_cmd_status = 0;
+                    if(ret == ADSP_CONTROL_BUSY)
                     {
-                        // Receive write payload
-                        chan_in_buf_byte(c_control, (uint8_t*)module->control.config + offset, req.payload_len);
-                        module->control.cmd_id = req.cmd_id;
-                        module->control.config_rw_state = config_write_pending;
-                    }
-                    else
-                    {
-                        chan_in_buf_byte(c_control, (uint8_t*)payload, req.payload_len); // Copy write payload to temp buffer and discard
-                        printf("WARNING: Previous write to the config not applied by the module!! Ignoring write command.");
-                    }
-                    if(size != req.payload_len)
-                    {
-                        printf("ERROR: payload_len mismatch. Expected %lu, but received %u\n", size, req.payload_len);
-                        xassert(0);
+                        // Save the status to return to the host if it queries for the write command status
+                        prev_write_cmd_status = SERVICER_COMMAND_RETRY;
                     }
                 }
 
