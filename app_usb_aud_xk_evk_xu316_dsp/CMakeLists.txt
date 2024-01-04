@@ -4,11 +4,12 @@ project(app_usb_aud_xk_evk_xu316_dsp)
 
 
 set( AUTOGEN_DIR ${CMAKE_CURRENT_BINARY_DIR}/src.autogen )
-file( GLOB MODULE_CONFIG_YAML_FILES  ${CMAKE_CURRENT_LIST_DIR}/src/yaml/*.yaml )
+set(CONFIG_YAML_PATH ${CMAKE_CURRENT_LIST_DIR}/../../lib_audio_dsp/lib_audio_dsp/dummy_stages/config)
+file( GLOB MODULE_CONFIG_YAML_FILES  ${CONFIG_YAML_PATH}/*.yaml )
 #file( GLOB MODULE_CONFIG_YAML_FILES  ${CMAKE_CURRENT_LIST_DIR}/build/dsp_design/yaml/*.yaml )
 file(GLOB TEMPLATE_FILES ${CMAKE_CURRENT_LIST_DIR}/src/templates/*.mako)
 unset(CMD_MAP_GEN_ARGS)
-list(APPEND CMD_MAP_GEN_ARGS --out-dir ${AUTOGEN_DIR})
+list(APPEND CMD_MAP_GEN_ARGS --config-dir ${CONFIG_YAML_PATH} --out-dir ${AUTOGEN_DIR})
 set(CMD_MAP_GEN_SCRIPT ${CMAKE_CURRENT_LIST_DIR}/src/python/parse_config.py)
 
 # Get output C file names

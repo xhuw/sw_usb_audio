@@ -5,16 +5,17 @@ import argparse
 import os
 from pathlib import Path
 
-files = glob.glob("*.yaml")
+
 
 pkg_dir = Path(__file__).parent
-files = glob.glob(f"{pkg_dir}/../yaml/*.yaml")
 templates_dir = f"{pkg_dir}/../templates"
 
 def parse_arguments():
     """ Parse command line arguments """
 
     parser = argparse.ArgumentParser(description='Generate config struct files')
+    parser.add_argument('--config-dir', '-c', required=True, type=str, default=None,
+                        help="Path to the config yaml files")
     parser.add_argument('--out-dir', '-o', type=str, default=f'{str(Path.cwd())}/output_files',
                         help="output directory for host and device files")
     args = parser.parse_args()
@@ -37,6 +38,8 @@ cmd_ids_template = Template(filename=f'{templates_dir}/cmds_h.mako')
 module_config_offsets_template = Template(filename=f'{templates_dir}/cmd_offsets_h.mako')
 
 cmd_map = {}
+
+files = glob.glob(f"{args.config_dir}/*.yaml")
 
 for fl in files:
     with open(fl, "r") as fd:
