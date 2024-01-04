@@ -57,7 +57,7 @@ message(APP_C_SRCS "${APP_C_SRCS}")
 
 include(${CMAKE_CURRENT_LIST_DIR}/configs_test.cmake)
 
-set(APP_INCLUDES src src/core src/extensions ${AUTOGEN_DIR}/common ${AUTOGEN_DIR}/device)
+set(APP_INCLUDES src src/core src/extensions ${AUTOGEN_DIR}/common ${AUTOGEN_DIR}/device ${LIB_AUDIO_DSP_PATH}/api/dummy_stages)
 set(XMOS_SANDBOX_DIR ${CMAKE_CURRENT_LIST_DIR}/../..)
 
 XMOS_REGISTER_APP()
