@@ -9,7 +9,7 @@
 #include <xcore/hwtimer.h>
 #include "xua_conf.h"
 #include "dsp.h"
-#include "dspt_module.h"
+#include "adsp_module.h"
 #include "dspt_control.h"
 #include "parametric_eq.h"
 #include "agc.h"

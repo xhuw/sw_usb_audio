@@ -8,7 +8,7 @@
 #include <xcore/chanend.h>
 #include <xcore/select.h>
 #include "dspt_control.h"
-#include "dspt_module.h"
+#include "adsp_module.h"
 #include "xud_std_requests.h" // For USB_BMREQ_D2H_VENDOR_DEV and USB_BMREQ_H2D_VENDOR_DEV defines
 
 typedef struct {

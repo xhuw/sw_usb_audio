@@ -4,7 +4,7 @@
 #include <xcore/channel.h>
 #include <xcore/parallel.h>
 #include <stddef.h>
-#include "dspt_module.h"
+#include "adsp_module.h"
 
 #include "agc.h"
 #include "parametric_eq.h"
