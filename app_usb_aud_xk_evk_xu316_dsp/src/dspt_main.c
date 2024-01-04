@@ -11,8 +11,6 @@
 #include "dsp.h"
 #include "adsp_module.h"
 #include "dspt_control.h"
-#include "parametric_eq.h"
-#include "agc.h"
 
 
 
