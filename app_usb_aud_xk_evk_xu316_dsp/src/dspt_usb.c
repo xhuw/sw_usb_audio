@@ -23,13 +23,14 @@ void UserBufferManagement(unsigned sampsFromUsbToAudio[], unsigned sampsFromAudi
     }
     chanend_out_end_token(g_c_to_dsp);
 
+    // Note: We're routing USB OUT -> USB IN and I2S ADC -> I2S DAC
     for(int ch=0; ch<NUM_USB_CHAN_OUT; ch++) // To Audio
     {
-        sampsFromUsbToAudio[ch] = chanend_in_word(g_c_to_dsp);
+        sampsFromAudioToUsb[ch] = chanend_in_word(g_c_to_dsp);
     }
     for(int ch=0; ch<NUM_USB_CHAN_IN; ch++) // To USB
     {
-        sampsFromAudioToUsb[ch] = chanend_in_word(g_c_to_dsp);
+        sampsFromUsbToAudio[ch] = chanend_in_word(g_c_to_dsp);
     }
     chanend_check_end_token(g_c_to_dsp);
 }
