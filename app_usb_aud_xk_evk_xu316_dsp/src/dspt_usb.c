@@ -12,20 +12,17 @@ void UserBufferManagementInit()
     //TODO
 }
 
-void UserBufferManagement(unsigned sampsFromUsbToAudio[], unsigned sampsFromAudioToUsb[])
+static void app_dsp_source(int32_t *samples, unsigned num_samples)
 {
-    //offload_data_to_dsp_engine(g_c_to_dsp, sampsFromUsbToAudio, sampsFromAudioToUsb);
-    for(int ch=0; ch<NUM_USB_CHAN_OUT; ch++) // From USB
+    for(int i=0; i<num_samples; i++)
     {
-        chanend_out_word(g_c_to_dsp, sampsFromUsbToAudio[ch]);
-    }
-    for(int ch=0; ch<NUM_USB_CHAN_IN; ch++) // From Audio
-    {
-        chanend_out_word(g_c_to_dsp, sampsFromAudioToUsb[ch]);
+        chanend_out_word(g_c_to_dsp, samples[i]);
     }
     chanend_out_end_token(g_c_to_dsp);
+}
 
-    // Do a non blocking receive from DSP
+static void app_dsp_sink_non_blocking(int32_t *samples, unsigned num_samples)
+{
     SELECT_RES_ORDERED(
         CASE_THEN(g_c_from_dsp, event_recv_from_dsp),
         DEFAULT_THEN(event_default)
@@ -33,30 +30,57 @@ void UserBufferManagement(unsigned sampsFromUsbToAudio[], unsigned sampsFromAudi
     {
         event_recv_from_dsp:
         {
-            // Note: We're routing USB OUT -> USB IN and I2S ADC -> I2S DAC
-            for(int ch=0; ch<NUM_USB_CHAN_OUT; ch++) // To Audio
+            for(int i=0; i<num_samples; i++)
             {
-                sampsFromAudioToUsb[ch] = chanend_in_word(g_c_from_dsp);
-            }
-            for(int ch=0; ch<NUM_USB_CHAN_IN; ch++) // To USB
-            {
-                sampsFromUsbToAudio[ch] = chanend_in_word(g_c_from_dsp);
+                samples[i] = chanend_in_word(g_c_from_dsp);
             }
             chanend_check_end_token(g_c_from_dsp);
             break;
         }
         event_default:
         {
-            for(int ch=0; ch<NUM_USB_CHAN_OUT; ch++) // To Audio
+            for(int i=0; i<num_samples; i++)
             {
-                sampsFromAudioToUsb[ch] = 0x7fffffff;
-            }
-            for(int ch=0; ch<NUM_USB_CHAN_IN; ch++) // To USB
-            {
-                sampsFromUsbToAudio[ch] = 0x7fffffff;;
+                samples[i] = 0x7fffffff;
             }
             break;
         }
+    }
+}
+
+static void app_dsp_sink_blocking(int32_t *samples, unsigned num_samples)
+{
+    for(int i=0; i<num_samples; i++)
+    {
+        samples[i] = chanend_in_word(g_c_from_dsp);
+    }
+}
+
+
+void UserBufferManagement(unsigned sampsFromUsbToAudio[], unsigned sampsFromAudioToUsb[])
+{
+    int32_t input[NUM_USB_CHAN_OUT + NUM_USB_CHAN_IN];
+    for(int ch=0; ch<NUM_USB_CHAN_OUT; ch++) // From USB
+    {
+        input[ch] = (int32_t)sampsFromUsbToAudio[ch];
+    }
+    for(int ch=0; ch<NUM_USB_CHAN_IN; ch++) // From Audio
+    {
+        input[ch + NUM_USB_CHAN_OUT] = (int32_t)sampsFromAudioToUsb[ch];
+    }
+    app_dsp_source(input, NUM_USB_CHAN_OUT+NUM_USB_CHAN_IN);
+
+
+    int32_t output[NUM_USB_CHAN_OUT + NUM_USB_CHAN_IN];
+    app_dsp_sink_non_blocking(output, NUM_USB_CHAN_OUT + NUM_USB_CHAN_IN);
+
+    for(int ch=0; ch<NUM_USB_CHAN_OUT; ch++) // To Audio
+    {
+        sampsFromAudioToUsb[ch] = (unsigned)output[ch];
+    }
+    for(int ch=0; ch<NUM_USB_CHAN_IN; ch++) // To USB
+    {
+        sampsFromUsbToAudio[ch] = (unsigned)output[NUM_USB_CHAN_OUT + ch];
     }
 }
 
