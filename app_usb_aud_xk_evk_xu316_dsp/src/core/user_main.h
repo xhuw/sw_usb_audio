@@ -6,7 +6,7 @@
 void AudioHwRemote(chanend c);
 
 extern unsafe chanend uc_audiohw;
-extern void dsp_main(chanend c_control);
+extern void dsp_main_wrapper(chanend c_control);
 
 #define USER_MAIN_DECLARATIONS chan c_audiohw; chan c_control;
 
@@ -16,7 +16,7 @@ extern void dsp_main(chanend c_control);
                                             unsafe{\
                                                 uc_audiohw = (chanend) c_audiohw;\
                                             }\
-                                            dsp_main(c_control);\
+                                            dsp_main_wrapper(c_control);\
                                         }\
                                     }\
 \
