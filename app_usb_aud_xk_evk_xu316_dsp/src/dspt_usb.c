@@ -21,11 +21,12 @@ void UserBufferManagement(unsigned sampsFromUsbToAudio[], unsigned sampsFromAudi
     {
         input[ch + NUM_USB_CHAN_OUT] = (int32_t)sampsFromAudioToUsb[ch];
     }
-    app_dsp_source(input /*, NUM_USB_CHAN_OUT+NUM_USB_CHAN_IN*/);
 
 
     int32_t output[NUM_USB_CHAN_OUT + NUM_USB_CHAN_IN];
     app_dsp_sink(output /*, NUM_USB_CHAN_OUT + NUM_USB_CHAN_IN*/);
+
+    app_dsp_source(input /*, NUM_USB_CHAN_OUT+NUM_USB_CHAN_IN*/);
 
     for(int ch=0; ch<NUM_USB_CHAN_OUT; ch++) // To Audio
     {
