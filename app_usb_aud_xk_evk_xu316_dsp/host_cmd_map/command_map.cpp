@@ -120,7 +120,7 @@ static int spi_info[2] = {
 static int usb_info[3] = {
     0x20b1,  // vendor ID
     0x0018, // product ID
-    0           // control interface number
+    3           // control interface number
 };
 
 extern "C"

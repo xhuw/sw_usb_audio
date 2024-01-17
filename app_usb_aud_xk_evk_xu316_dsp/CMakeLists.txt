@@ -41,7 +41,8 @@ set(SW_USB_AUDIO_FLAGS ${EXTRA_BUILD_FLAGS} -fcomment-asm
                                             -DADAT_TX_USE_SHARED_BUFF=1
                                             -DQUAD_SPI_FLASH=1
                                             -DXSCOPE
-                                            -DUAC_FORCE_FEEDBACK=1)
+                                            -DUAC_FORCE_FEEDBACK=1
+                                            -DUSB_CONTROL_DESCS=1)
 
 set(APP_COMPILER_FLAGS_1AMi2o2xxxxxx ${SW_USB_AUDIO_FLAGS} -DAUDIO_CLASS=1)
 
@@ -50,20 +51,20 @@ set(APP_COMPILER_FLAGS_2AMi2o2xxxxxx ${SW_USB_AUDIO_FLAGS})
 
 file(GLOB C_SRC CONFIGURE_DEPENDS RELATIVE ${CMAKE_CURRENT_LIST_DIR} src/*.c)
 
-set(APP_C_SRCS 
+set(APP_C_SRCS
     "${C_SRC};build/dsp_pipeline/dsp_main.c")
 
 #set(APP_COMPILER_FLAGS_test ${SW_USB_AUDIO_FLAGS} -DOFFSET_GEN=1 -DEXCLUDE_USB_AUDIO_MAIN -fcmdline-buffer-bytes=512)
 
 include(${CMAKE_CURRENT_LIST_DIR}/configs_test.cmake)
 
-set(APP_INCLUDES 
-    src 
-    src/core 
-    src/extensions 
-    ${AUTOGEN_DIR}/common 
-    ${AUTOGEN_DIR}/device 
-    ${LIB_AUDIO_DSP_PATH}/api/stages 
+set(APP_INCLUDES
+    src
+    src/core
+    src/extensions
+    ${AUTOGEN_DIR}/common
+    ${AUTOGEN_DIR}/device
+    ${LIB_AUDIO_DSP_PATH}/api/stages
     ${CMAKE_CURRENT_SOURCE_DIR}/build/dsp_pipeline)
 set(XMOS_SANDBOX_DIR ${CMAKE_CURRENT_LIST_DIR}/../..)
 
