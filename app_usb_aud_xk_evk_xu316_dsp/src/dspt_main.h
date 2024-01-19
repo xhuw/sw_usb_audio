@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include "stages/adsp_module.h"
 #include "stages/biquad.h"
+#include "stages/cascaded_biquads.h"
 
 DECLARE_JOB(dsp_control_thread, (chanend_t, module_instance_t **, size_t));
 DECLARE_JOB(dsp_thread, (chanend_t, chanend_t, module_instance_t**, size_t));
