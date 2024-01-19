@@ -29,7 +29,7 @@ add_custom_target(cmd_map_generation
 
 set(APP_HW_TARGET XK-EVK-XU316)
 include(${CMAKE_CURRENT_LIST_DIR}/../deps.cmake)
-set(APP_PCA_ENABLE ON)
+set(APP_PCA_ENABLE OFF)
 set(SW_USB_AUDIO_FLAGS ${EXTRA_BUILD_FLAGS} -fcomment-asm
                                             -Wall
                                             -O3
