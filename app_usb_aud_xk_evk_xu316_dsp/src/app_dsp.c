@@ -5,7 +5,7 @@
 #include "xcore/parallel.h"
 #include "dspt_control.h"
 
-#include <adsp_pipeline.h>
+#include <stages/adsp_pipeline.h>
 
 static audio_dsp_t m_dsp;
 

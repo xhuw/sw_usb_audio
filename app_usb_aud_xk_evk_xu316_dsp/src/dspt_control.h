@@ -1,7 +1,7 @@
 #ifndef DSPT_CONTROL_H
 #define DSPT_CONTROL_H
 
-#include "adsp_module.h"
+#include <stages/adsp_module.h>
 #include "xcore/chanend.h"
 #include <stdint.h>
 #include <xcore/parallel.h>
