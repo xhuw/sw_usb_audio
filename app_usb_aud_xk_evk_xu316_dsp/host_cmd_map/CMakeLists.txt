@@ -36,21 +36,21 @@ enable_language(CXX C)
 #*********************************************************
 set(XU316_DSP_APP_PATH ${CMAKE_CURRENT_LIST_DIR}/../)
 set(LIB_AUDIO_DSP_PATH ${CMAKE_CURRENT_LIST_DIR}/../../../lib_audio_dsp/lib_audio_dsp)
-set(CONFIG_YAML_PATH ${LIB_AUDIO_DSP_PATH}/src/stages/config)
+set(CONFIG_YAML_PATH ${LIB_AUDIO_DSP_PATH}/../stage_config)
 set( AUTOGEN_DIR ${CMAKE_CURRENT_BINARY_DIR}/src.autogen )
 file( GLOB CONFIGRE_DEPENDS MODULE_CONFIG_YAML_FILES  ${CONFIG_YAML_PATH}/*.yaml )
 #file( GLOB MODULE_CONFIG_YAML_FILES  ${XU316_DSP_APP_PATH}/build/dsp_pipeline/yaml/*.yaml )
-file(GLOB TEMPLATE_FILES ${LIB_AUDIO_DSP_PATH}/src/stages/autogen/templates/*.mako)
+file(GLOB TEMPLATE_FILES ${LIB_AUDIO_DSP_PATH}/../python/audio_dsp/design/templates/*.mako)
 unset(CMD_MAP_GEN_ARGS)
 list(APPEND CMD_MAP_GEN_ARGS --config-dir ${CONFIG_YAML_PATH} --out-dir ${AUTOGEN_DIR})
-set(CMD_MAP_GEN_SCRIPT ${LIB_AUDIO_DSP_PATH}/src/stages/autogen/parse_config.py)
+set(CMD_MAP_GEN_SCRIPT ${LIB_AUDIO_DSP_PATH}/../python/audio_dsp/design/parse_config.py)
 
 # Get output C file names
 set(OUTPUT_C_FILES ${AUTOGEN_DIR}/generator/gen_cmd_map_offset.c)
 
 add_custom_command(
     OUTPUT ${OUTPUT_C_FILES}
-    COMMAND python ${CMD_MAP_GEN_SCRIPT} ${CMD_MAP_GEN_ARGS}
+    COMMAND python -m audio_dsp.design.parse_config ${CMD_MAP_GEN_ARGS}
     DEPENDS ${MODULE_CONFIG_YAML_FILES} ${CMD_MAP_GEN_SCRIPT} ${TEMPLATE_FILES}
     COMMENT "Generating cmd_map files included in the device and host application"
     VERBATIM
